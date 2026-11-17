@@ -1,0 +1,107 @@
+# ============================================================================
+# Kubernetes ConfigMap 样例
+# ----------------------------------------------------------------------------
+# 复制为 md-agent-platform-cm.yaml 后填写真实地址；该文件已被 .gitignore 忽略。
+# 所有凭据都通过 md-agent-platform-secret 注入，不要写进 ConfigMap。
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: md-agent-platform
+  namespace: default
+data:
+  application.yml: |
+    server:
+      port: 9081
+
+    spring:
+      application:
+        name: md-agent-platform
+      ssl:
+        bundle:
+          pem:
+            es-ssl-bundle:
+              truststore:
+                certificate: classpath:certs/http_ca_prod.crt
+      config:
+        activate:
+          on-cloud-platform: kubernetes
+        import: "optional:kubernetes:"
+      cloud:
+        kubernetes:
+          config:
+            enabled: true
+            name: md-agent-platform
+            namespace: default
+      elasticsearch:
+        uris:
+          - https://REPLACE_WITH_ES_HOST:9200
+        username: elastic
+        password: ${ES_PASSWORD}
+        restclient:
+          ssl:
+            bundle: es-ssl-bundle
+      ai:
+        model:
+          apiKey: ${MODEL_API_KEY}
+          baseUrl: https://ark.cn-beijing.volces.com/api/
+          modelName: deepseek-v4-flash-260425
+          reasoningEffort: low
+          maxIdleConnections: 200
+          keepAliveDuration: 60
+          tracingEndpoint: https://REPLACE_WITH_TRACE_ENDPOINT/v1/traces
+          embeddingModel: doubao-embedding-vision-250615
+      datasource:
+        url: jdbc:mysql://REPLACE_WITH_MYSQL_HOST:3306/REPLACE_WITH_DATABASE?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      data:
+        redis:
+          host: REPLACE_WITH_REDIS_HOST
+          port: 6379
+          database: 0
+          timeout: 10000
+
+    agent-platform:
+      workspace-root: /opt/md-agent-platform/workspace
+      verbose-trace-users: []
+      messaging:
+        bots:
+          - name: default
+            platform: WECOM
+            enabled: true
+            default-agent: rag_agent
+            wecom:
+              bot-id: ${WECOM_BOT_ID}
+              secret: ${WECOM_BOT_SECRET}
+          - name: feishu-main
+            platform: FEISHU
+            enabled: true
+            default-agent: harness_agent
+            feishu:
+              app-id: ${FEISHU_APP_ID}
+              app-secret: ${FEISHU_APP_SECRET}
+              verification-token: ${FEISHU_VERIFICATION_TOKEN}
+              encrypt-key: ${FEISHU_ENCRYPT_KEY}
+              base-url: https://open.feishu.cn
+      agents:
+        md-dir: agents
+
+    retrieval:
+      index-name: doc_vector
+      rrf-window: 50
+      rrf-k: 60
+      top-n: 20
+      knn-candidates: 500
+      knn-k: 20
+
+    openobserve:
+      baseUrl: https://REPLACE_WITH_OPENOBSERVE_HOST
+      organization: ${OPENOBSERVE_ORGANIZATION}
+      username: ${OPENOBSERVE_USERNAME}
+      password: ${OPENOBSERVE_PASSWORD}
+
+    logging:
+      level:
+        com.md.agentplatform: INFO

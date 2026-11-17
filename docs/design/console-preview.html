@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Digi-Claw · Agent Platform 控制台（原型）</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fbfbfd;--panel:#fff;--bd:#e9e9ef;--bd2:#dedee6;
+  --t1:#16161c;--t2:#5b5b68;--t3:#93939f;
+  --pri:#5b5bd6;--pri-bg:#eeeefe;--pri-bd:#d9d9fb;
+  --grn:#187a45;--grn-bg:#e7f5ed;
+  --amb:#8a6100;--amb-bg:#fdf4e3;
+  --blu:#1a56db;--blu-bg:#e9f0fe;
+  --red:#b42318;--red-bg:#fdeceb;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+}
+html,body{height:100%}
+body{font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--t1);background:var(--bg);-webkit-font-smoothing:antialiased}
+svg{display:block;flex:0 0 auto}
+.app{display:grid;grid-template-columns:238px 1fr;height:100vh}
+
+/* ---------- sidebar ---------- */
+.side{background:var(--panel);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px;padding:15px 16px 13px}
+.logo{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,#6d6df0,#4f46e5);display:grid;place-items:center;color:#fff}
+.brand b{display:block;font-size:13.5px;font-weight:620;letter-spacing:-.01em;line-height:1.25}
+.brand em{display:block;font-style:normal;font-size:10.5px;color:var(--t3);letter-spacing:.02em}
+.ns{margin:5px 12px 10px;padding:7px 10px;border:1px solid var(--bd);border-radius:9px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:.12s}
+.ns:hover{background:#fafafc;border-color:var(--bd2)}
+.ns .av{width:22px;height:22px;border-radius:6px;background:#f0f0f6;display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--t2)}
+.ns .tx{flex:1;min-width:0}
+.ns .tx label{display:block;font-size:10px;color:var(--t3);letter-spacing:.03em}
+.ns .tx span{display:block;font-size:12.5px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav{flex:1;overflow-y:auto;padding:0 10px 14px}
+.nav::-webkit-scrollbar{width:8px}
+.nav::-webkit-scrollbar-thumb{background:#e6e6ec;border-radius:4px}
+.grp{font-size:10.5px;font-weight:600;letter-spacing:.09em;color:#a6a6b0;text-transform:uppercase;padding:15px 9px 6px}
+.item{display:flex;align-items:center;gap:9px;height:31px;padding:0 9px;border-radius:7px;color:var(--t2);cursor:pointer;font-size:13px;transition:.1s;user-select:none}
+.item:hover{background:#f5f5f8;color:var(--t1)}
+.item.on{background:var(--pri-bg);color:var(--pri);font-weight:560}
+.item .pill{margin-left:auto;font-size:10px;font-weight:650;background:#e9e9f2;color:#6b6b7a;padding:1px 6px;border-radius:999px}
+.item.on .pill{background:#fff;color:var(--pri)}
+.item .pill.am{background:var(--amb-bg);color:var(--amb)}
+.sfoot{border-top:1px solid var(--bd);padding:11px 14px;display:flex;align-items:center;gap:10px}
+.sfoot .av{width:24px;height:24px;border-radius:50%;background:#e8e8f2;display:grid;place-items:center;font-size:10.5px;font-weight:600;color:#5b5b68}
+.sfoot .tx{flex:1;min-width:0}
+.sfoot .tx label{display:block;font-size:10px;color:var(--t3)}
+.sfoot .tx span{display:block;font-size:12px;font-weight:540;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sfoot a{font-size:11.5px;color:var(--t3);text-decoration:none;cursor:pointer}
+.sfoot a:hover{color:var(--pri)}
+
+/* ---------- main ---------- */
+.main{display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.top{height:48px;border-bottom:1px solid var(--bd);background:var(--panel);display:flex;align-items:center;gap:14px;padding:0 20px;flex:0 0 auto}
+.top .ttl{font-weight:600;font-size:13px}
+.top .srch{margin-left:auto;display:flex;align-items:center;gap:7px;border:1px solid var(--bd);border-radius:8px;padding:5px 9px;width:236px;color:var(--t3);font-size:12.5px;cursor:text}
+.top .srch:hover{border-color:var(--bd2)}
+.top .kbd{border:1px solid var(--bd);border-radius:4px;padding:0 4px;font-size:10px;color:var(--t3);background:#fafafc;font-family:var(--mono)}
+.top .scope{font-size:12px;color:var(--t3);font-family:var(--mono)}
+.body{flex:1;overflow-y:auto;padding:24px 28px 70px}
+.body::-webkit-scrollbar{width:10px}
+.body::-webkit-scrollbar-thumb{background:#e6e6ec;border-radius:5px;border:2px solid var(--bg)}
+.wrap{max-width:1180px}
+.wrap.wide{max-width:1420px}
+.page{display:none}
+.page.on{display:block}
+h1{font-size:25px;font-weight:620;letter-spacing:-.022em;margin-bottom:6px}
+.sub{color:var(--t2);font-size:13.5px;margin-bottom:4px}
+.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
+.btn{border:none;background:var(--pri);color:#fff;font-size:12.5px;font-weight:560;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:.12s}
+.btn:hover{background:#4f4fca}
+.btn.ghost{background:#fff;color:var(--t1);border:1px solid var(--bd2);font-weight:520}
+.btn.ghost:hover{background:#f7f7fa;border-color:#c9c9d4}
+.btn.sm{padding:5px 10px;font-size:12px}
+
+/* ---------- chips / search ---------- */
+.chips{display:flex;align-items:center;gap:8px;margin:0 0 18px;flex-wrap:wrap}
+.chip{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:6px 11px;font-size:12.5px;color:var(--t2);cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:.12s}
+.chip:hover{border-color:var(--bd2);color:var(--t1)}
+.chip.on{border-color:var(--pri-bd);background:var(--pri-bg);color:var(--pri);font-weight:560}
+.chip i{font-style:normal;font-size:11px;color:#7d7d8a;background:#f2f2f7;border-radius:5px;padding:0 5px;font-weight:600}
+.chip.on i{background:#fff;color:var(--pri)}
+.chip .cdot{width:6px;height:6px;border-radius:50%}
+.fsrch{margin-left:auto;position:relative}
+.fsrch input{border:1px solid var(--bd);border-radius:9px;padding:7px 11px 7px 31px;width:252px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--t1)}
+.fsrch input::placeholder{color:var(--t3)}
+.fsrch input:focus{outline:none;border-color:var(--pri-bd);box-shadow:0 0 0 3px rgba(91,91,214,.10)}
+.fsrch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3)}
+
+/* ---------- cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:14px}
+.card{border:1px solid var(--bd);background:#fff;border-radius:12px;padding:16px 17px;cursor:pointer;transition:.14s;display:flex;flex-direction:column}
+.card:hover{border-color:var(--bd2);box-shadow:0 1px 3px rgba(16,16,32,.045),0 8px 22px -10px rgba(16,16,32,.12)}
+.card .r1{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.card .nm{font-weight:600;font-size:13.5px;letter-spacing:-.01em}
+.card .ds{color:var(--t2);font-size:12.5px;flex:1;min-height:36px}
+.card .tags{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11.5px;color:#63636f;background:#f4f4f7;border-radius:6px;padding:2px 8px}
+.card .ft{margin-top:11px;font-size:11.5px;color:var(--t3);border-top:1px solid #f3f3f6;padding-top:9px;display:flex;align-items:center;gap:6px}
+
+/* ---------- badges ---------- */
+.bdg{font-size:11px;font-weight:620;padding:2px 7px;border-radius:6px;white-space:nowrap;letter-spacing:.01em}
+.bdg.harness{background:#efeefe;color:#5b5bd6}
+.bdg.react{background:#f1f1f5;color:#5b5b68}
+.bdg.managed{background:var(--grn-bg);color:var(--grn)}
+.bdg.hosted{background:var(--amb-bg);color:var(--amb)}
+.bdg.external{background:var(--blu-bg);color:var(--blu)}
+.bdg.ro{background:var(--grn-bg);color:var(--grn)}
+.bdg.rw{background:var(--amb-bg);color:var(--amb)}
+.bdg.off{background:#f1f1f5;color:#8b8b96}
+.bdg.err{background:var(--red-bg);color:var(--red)}
+.bdg.ok{background:var(--grn-bg);color:var(--grn)}
+
+/* ---------- table ---------- */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.tbl th{text-align:left;font-weight:600;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.055em;padding:10px 14px;background:#fbfbfd;border-bottom:1px solid var(--bd);white-space:nowrap}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f4f4f7;color:var(--t2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover{background:#fcfcfd}
+.tbl td.nm{color:var(--t1);font-weight:530}
+.tbl td.mono{font-family:var(--mono);font-size:11.5px;color:#6b6b78}
+.tbl td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+
+/* ---------- switch ---------- */
+.sw{width:32px;height:18px;border-radius:999px;background:var(--pri);position:relative;display:inline-block;cursor:pointer;transition:.15s;flex:0 0 auto}
+.sw::after{content:"";position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.15s}
+.sw.off{background:#dcdce4}
+.sw.off::after{left:2px}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin:0 0 20px;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:9px 12px;font-size:13px;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.12s}
+.tab:hover{color:var(--t1)}
+.tab.on{color:var(--pri);border-bottom-color:var(--pri);font-weight:580}
+
+/* ---------- panes ---------- */
+.split{display:grid;grid-template-columns:1fr 384px;gap:16px;align-items:start}
+.split.wide{grid-template-columns:230px 1fr 384px}
+.pane{background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.pane .ph{padding:11px 14px;border-bottom:1px solid var(--bd);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;background:#fcfcfd}
+.pane .ph .rt{margin-left:auto;font-weight:400;font-size:11.5px;color:var(--t3)}
+.pane .pb{padding:14px}
+.pane+.pane{margin-top:14px}
+.sec{margin-bottom:20px}
+.sec>h3{font-size:12px;font-weight:620;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+pre.j{background:#0f1117;color:#d7dae3;border-radius:9px;padding:12px 13px;font:11.5px/1.65 var(--mono);overflow:auto;max-height:280px;white-space:pre;tab-size:2}
+pre.j::-webkit-scrollbar{width:9px;height:9px}
+pre.j::-webkit-scrollbar-thumb{background:#3a3f4b;border-radius:5px}
+.kv{display:grid;grid-template-columns:92px 1fr;gap:6px 12px;font-size:12.5px}
+.kv dt{color:var(--t3)}
+.kv dd{color:var(--t2);word-break:break-all;font-variant-numeric:tabular-nums}
+.kv dd.mono{font-family:var(--mono);font-size:11.5px}
+.hint{font-size:12px;color:var(--t3);line-height:1.6}
+.note{background:#fbfbfd;border:1px solid var(--bd);border-left:2px solid var(--pri);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--t2);line-height:1.6}
+.note b{color:var(--t1);font-weight:600}
+.empty{padding:36px;text-align:center;color:var(--t3);font-size:12.5px}
+
+/* ---------- tree ---------- */
+.tree{background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.trow{display:flex;align-items:center;gap:10px;padding:7px 14px 7px 0;border-bottom:1px solid #f5f5f8;cursor:pointer;font-size:12.5px;transition:.1s}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:#fafafc}
+.trow.sel{background:var(--pri-bg)}
+.trow .ind{display:flex;flex:0 0 auto}
+.trow .tw{width:15px;color:var(--t3);font-size:9px;display:grid;place-items:center;transition:.15s}
+.trow .tw.op{transform:rotate(90deg)}
+.trow .dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+.dot.ok{background:#2e9e63}.dot.run{background:#e0a421;box-shadow:0 0 0 3px rgba(224,164,33,.16)}.dot.err{background:#d64545}.dot.wait{background:#b9b9c4}
+.trow .nm{font-weight:530;color:var(--t1);white-space:nowrap}
+.trow .nm.kind{font-weight:420;color:var(--t2);font-size:12px}
+.trow .src{font-family:var(--mono);font-size:10.5px;color:#8b8b96;background:#f4f4f7;border-radius:5px;padding:1px 6px;white-space:nowrap}
+.trow .sp{flex:1;min-width:20px}
+.trow .bar{flex:0 0 200px;height:6px;border-radius:3px;background:#f2f2f6;position:relative;overflow:hidden}
+.trow .bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.trow .ms{flex:0 0 54px;text-align:right;color:var(--t3);font-size:11.5px;font-variant-numeric:tabular-nums}
+.trow .tk{flex:0 0 68px;text-align:right;color:var(--t3);font-size:11.5px;font-variant-numeric:tabular-nums}
+.runs{max-height:none}
+.runitem{padding:9px 13px;border-bottom:1px solid #f5f5f8;cursor:pointer;transition:.1s}
+.runitem:last-child{border-bottom:none}
+.runitem:hover{background:#fafafc}
+.runitem.sel{background:var(--pri-bg);box-shadow:inset 2px 0 0 var(--pri)}
+.runitem .a{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.runitem .a b{font-size:12.5px;font-weight:570;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.runitem .b{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3);font-family:var(--mono)}
+
+/* ---------- flow canvas ---------- */
+.canvas{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:26px 20px;background-image:radial-gradient(#e9e9f0 1px,transparent 1px);background-size:16px 16px;overflow:auto}
+.node{background:#fff;border:1.5px solid var(--bd2);border-radius:10px;padding:9px 12px;min-width:158px;box-shadow:0 1px 2px rgba(16,16,32,.05);display:inline-block}
+.node b{display:block;font-size:12.5px;font-weight:580}
+.node span{display:block;font-size:11px;color:var(--t3);font-family:var(--mono)}
+.node.pri{border-color:var(--pri);box-shadow:0 0 0 3px rgba(91,91,214,.10)}
+.node.dash{border-style:dashed;background:#fcfcfd}
+.frow{display:flex;align-items:center;gap:10px;justify-content:center}
+.fcol{display:flex;flex-direction:column;align-items:center;gap:0}
+.conn{width:1.5px;background:#d8d8e2;flex:0 0 auto}
+.rowgap{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--t3);flex-wrap:wrap;padding:12px 4px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+/* ---------- misc ---------- */
+.row{display:flex;align-items:center;gap:10px}
+.row.wrap{flex-wrap:wrap}
+.mt{margin-top:14px}.mt2{margin-top:22px}
+.ordnum{width:20px;height:20px;border-radius:6px;background:#f0f0f6;color:var(--t2);font-size:11px;font-weight:650;display:inline-grid;place-items:center;flex:0 0 auto;vertical-align:-5px;text-align:center}
+.drag{color:#c3c3cd;cursor:grab;font-size:13px;letter-spacing:-1px}
+.steps{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--t3)}
+.steps b{color:var(--t1);font-weight:560}
+</style>
+</head>
+<body><div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.6 14 4.8v6.4L8 14.4 2 11.2V4.8z"/><path d="M2 4.8 8 8l6-3.2M8 8v6.4"/></svg>
+      </div>
+      <div><b>Digi-Claw</b><em>Agent Platform</em></div>
+    </div>
+    <div class="ns">
+      <div class="av">D</div>
+      <div class="tx"><label>命名空间</label><span>default / dev</span></div>
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#93939f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5 8 10.5l4-4"/></svg>
+    </div>
+    <nav class="nav">
+      <div class="grp" style="padding-top:4px"></div>
+      <div class="item on" data-go="overview"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.4"/><circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none"/></svg>概览</div>
+
+      <div class="grp">运行</div>
+      <div class="item" data-go="traces"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="3.4" r="1.9"/><circle cx="3.8" cy="12.4" r="1.9"/><circle cx="12.2" cy="12.4" r="1.9"/><path d="M7 5 4.6 10.7M9 5l2.4 5.7"/></svg>执行链路<span class="pill am">3</span></div>
+      <div class="item" data-go="sessions"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.6 4.2h10.8v7.2H7.2L4 13.6v-2.2H2.6z"/></svg>会话记录</div>
+
+      <div class="grp">编排</div>
+      <div class="item" data-go="agents"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="5.3" r="2.5"/><path d="M3.4 13.2c0-2.5 2.1-4 4.6-4s4.6 1.5 4.6 4"/></svg>Agents<span class="pill">14</span></div>
+      <div class="item" data-go="harness"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="3.2" r="1.9"/><circle cx="3.6" cy="12.5" r="1.9"/><circle cx="12.4" cy="12.5" r="1.9"/><path d="M7 5 4.5 10.8M9 5l2.5 5.8M5.5 12.5h5"/></svg>Harness 编排</div>
+      <div class="item" data-go="workflows"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4h4.5M3 8h10M3 12h6.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="12.5" cy="12" r="1.5"/></svg>工作流</div>
+
+      <div class="grp">能力资源</div>
+      <div class="item" data-go="tools"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.6 2.4a3.5 3.5 0 0 0-3.3 4.7L2.6 11.8l1.6 1.6 4.7-4.7a3.5 3.5 0 0 0 4.7-3.3l-2 2-1.6-1.6z"/></svg>工具<span class="pill">122</span></div>
+      <div class="item" data-go="skills"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 1.8 9.6 6 13.8 7.6 9.6 9.2 8 13.4 6.4 9.2 2.2 7.6 6.4 6z"/></svg>Skills</div>
+      <div class="item" data-go="prompt"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3.4 3.4h9.2v9.2H3.4z"/><path d="M5.6 6.4h4.8M5.6 9h3" stroke-linecap="round"/></svg>Prompt</div>
+      <div class="item" data-go="mcp"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.6" y="3" width="10.8" height="4.4" rx="1.2"/><rect x="2.6" y="8.6" width="10.8" height="4.4" rx="1.2"/><path d="M5 5.2h.01M5 10.8h.01" stroke-linecap="round"/></svg>MCP 服务<span class="pill">4</span></div>
+      <div class="item" data-go="middleware"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2.4 14 5.4 8 8.4 2 5.4z"/><path d="M2 8.4l6 3 6-3"/></svg>Middleware<span class="pill">6</span></div>
+
+      <div class="grp">接入</div>
+      <div class="item" data-go="channels"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2 4.4h12v7.2H2z"/><path d="M2 4.8 8 9l6-4.2"/></svg>Channels</div>
+      <div class="item" data-go="endpoints"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 12 4"/><path d="M6.6 4H12v5.4"/></svg>Endpoints</div>
+
+      <div class="grp">设置</div>
+      <div class="item" data-go="models"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4.6" y="4.6" width="6.8" height="6.8" rx="1.4"/><path d="M8 1.6v3M8 11.4v3M1.6 8h3M11.4 8h3"/></svg>模型</div>
+      <div class="item" data-go="envs"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5z"/><path d="M2 5l6 3.2L14 5M8 8.2v6"/></svg>环境</div>
+      <div class="item" data-go="storage"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="4.2" rx="5.2" ry="2.1"/><path d="M2.8 4.2v7.6c0 1.2 2.3 2.1 5.2 2.1s5.2-.9 5.2-2.1V4.2"/></svg>状态存储</div>
+    </nav>
+    <div class="sfoot">
+      <div class="av">AD</div>
+      <div class="tx"><label>已登录</label><span>admin</span></div>
+      <a>设置</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="ttl" id="topTitle">概览</div>
+      <div class="srch">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg>
+        搜索 agent / 工具 / MCP…
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="scope">default / dev</div>
+    </div>
+    <div class="body">
+      <div class="wrap">        <!-- ============ 概览 ============ -->
+        <section class="page on" id="p-overview">
+          <div class="hd">
+            <div>
+              <h1>概览</h1>
+              <div class="sub">统一管理 Agent 的能力、运行连接与最近的工作。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">查看执行链路</button>
+              <button class="btn">+ 新建 Agent</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(196px,1fr));margin-bottom:22px">
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">Agents</div><span class="bdg harness">3 harness</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">14</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">11 ReAct · 3 Harness</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">工具</div><span class="bdg external">4 MCP</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">122</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">本地 48 · MCP 74</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">今日执行</div><span class="bdg ok">+12%</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">128</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">成功 122 · 失败 3 · 运行中 3</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">平均耗时</div></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">8.4<span style="font-size:14px;color:#93939f;font-weight:500"> s</span></div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">P95 24.8s · 最慢 workwx_batch_agent</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">今日 Token</div></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">1.82<span style="font-size:14px;color:#93939f;font-weight:500"> M</span></div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">缓存命中 61%</div>
+            </div>
+          </div>
+
+          <div class="split">
+            <div>
+              <div class="pane">
+                <div class="ph">最近执行<span class="rt">实时</span></div>
+                <table class="tbl" style="border:none;border-radius:0">
+                  <thead><tr><th>Agent</th><th>会话</th><th>状态</th><th class="num">耗时</th><th class="num">Token</th></tr></thead>
+                  <tbody>
+                    <tr><td class="nm">workwx_batch_agent</td><td class="mono">wo7U1…rqlw</td><td><span class="dot run" style="display:inline-block;margin-right:6px"></span>运行中</td><td class="num">12.4s</td><td class="num">142k</td></tr>
+                    <tr><td class="nm">deployment_agent</td><td class="mono">ou_87a…0de7</td><td><span class="dot ok" style="display:inline-block;margin-right:6px"></span>成功</td><td class="num">48.2s</td><td class="num">318k</td></tr>
+                    <tr><td class="nm">workwx_doc_agent</td><td class="mono">sub-81d3…a6e5</td><td><span class="dot ok" style="display:inline-block;margin-right:6px"></span>成功</td><td class="num">6.2s</td><td class="num">31k</td></tr>
+                    <tr><td class="nm">diagnosis_agent</td><td class="mono">cmr-prod</td><td><span class="dot err" style="display:inline-block;margin-right:6px"></span>失败</td><td class="num">22.9s</td><td class="num">96k</td></tr>
+                    <tr><td class="nm">workwx_notify_agent</td><td class="mono">gw-f991…936</td><td><span class="dot ok" style="display:inline-block;margin-right:6px"></span>成功</td><td class="num">3.3s</td><td class="num">8k</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pane">
+                <div class="ph">能力资源健康度</div>
+                <div class="pb">
+                  <div class="row" style="margin-bottom:11px"><div style="width:150px;font-size:12.5px">MCP 服务</div><div class="bar" style="flex:1;height:6px;background:#f2f2f6;border-radius:3px;position:relative;overflow:hidden"><i style="position:absolute;left:0;top:0;bottom:0;width:75%;background:#5b5bd6;border-radius:3px"></i></div><div class="ms" style="width:52px;text-align:right;color:#93939f;font-size:11.5px">3 / 4</div></div>
+                  <div class="row" style="margin-bottom:11px"><div style="width:150px;font-size:12.5px">工具已注册</div><div class="bar" style="flex:1;height:6px;background:#f2f2f6;border-radius:3px;position:relative;overflow:hidden"><i style="position:absolute;left:0;top:0;bottom:0;width:100%;background:#5b5bd6;border-radius:3px"></i></div><div class="ms" style="width:52px;text-align:right;color:#93939f;font-size:11.5px">122</div></div>
+                  <div class="row" style="margin-bottom:11px"><div style="width:150px;font-size:12.5px">Skills 已发布</div><div class="bar" style="flex:1;height:6px;background:#f2f2f6;border-radius:3px;position:relative;overflow:hidden"><i style="position:absolute;left:0;top:0;bottom:0;width:100%;background:#2e9e63;border-radius:3px"></i></div><div class="ms" style="width:52px;text-align:right;color:#93939f;font-size:11.5px">9 / 9</div></div>
+                  <div class="row"><div style="width:150px;font-size:12.5px">Channels 在线</div><div class="bar" style="flex:1;height:6px;background:#f2f2f6;border-radius:3px;position:relative;overflow:hidden"><i style="position:absolute;left:0;top:0;bottom:0;width:66%;background:#e0a421;border-radius:3px"></i></div><div class="ms" style="width:52px;text-align:right;color:#93939f;font-size:11.5px">2 / 3</div></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">需要关注<span class="rt">3</span></div>
+                <div class="pb" style="padding:0">
+                  <div class="runitem" style="box-shadow:inset 2px 0 0 #d64545">
+                    <div class="a"><span class="dot err"></span><b>diagnosis_agent 执行失败</b></div>
+                    <div class="b">22.9s · cmr-prod</div>
+                    <div class="hint" style="margin-top:5px">StatefulSet 查询超时，工具未返回结果</div>
+                  </div>
+                  <div class="runitem" style="box-shadow:inset 2px 0 0 #e0a421">
+                    <div class="a"><span class="dot wait"></span><b>workwx-email-mcp 未授权</b></div>
+                    <div class="b">错误码 851008</div>
+                    <div class="hint" style="margin-top:5px">5 个工具不可用，涉及 mail_send</div>
+                  </div>                  <div class="runitem" style="box-shadow:inset 2px 0 0 #b42318">
+                    <div class="a"><span class="dot err"></span><b>feishu-main 指向不存在的 Agent</b></div>
+                    <div class="b">default-agent: harness_agent</div>
+                    <div class="hint" style="margin-top:5px">该 bot 已启用，但 harness_agent 没有注册，飞书侧来消息会路由失败</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">最近变更</div>
+                <div class="pb">
+                  <div class="steps" style="flex-direction:column;align-items:flex-start;gap:9px">
+                    <div class="steps"><b>workwx_notify_agent</b> Prompt 更新 · 12 分钟前</div>
+                    <div class="steps"><b>doc-mcp</b> 工具白名单调整为只读 · 1 小时前</div>
+                    <div class="steps"><b>workwx_batch_agent</b> 发布到 Nacos · 3 小时前</div>
+                    <div class="steps"><b>AgentRunTraceMiddleware</b> 顺序调整 · 昨天</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Agents 列表 ============ -->
+        <section class="page" id="p-agents">
+          <div class="hd">
+            <div>
+              <h1>Agents</h1>
+              <div class="sub">选择一个 Agent 管理它的能力、运行时连接与最近的工作。</div>
+            </div>
+            <button class="btn">+ 新建 Agent</button>
+          </div>
+
+          <div class="chips">
+            <div class="chip on">全部 <i>14</i></div>
+            <div class="chip"><span class="cdot" style="background:#5b5bd6"></span>Harness <i>3</i></div>
+            <div class="chip"><span class="cdot" style="background:#a3a3ad"></span>ReAct <i>11</i></div>
+            <div class="chip">企微文档 <i>3</i></div>
+            <div class="chip">运维 <i>6</i></div>
+            <div class="chip">已停用 <i>0</i></div>
+            <div class="fsrch">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg>
+              <input placeholder="搜索 agents">
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card" data-go="agent">
+              <div class="r1"><div class="nm">workwx_batch_agent</div><span class="bdg harness">harness</span></div>
+              <div class="ds">批量调度型 Agent：拆解任务并异步派发给子 Agent，汇总结果后统一交付。</div>
+              <div class="tags"><span class="tag">工时核对</span><span class="tag">子 Agent 3</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布 · Nacos dg-claw-dev</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">deployment_agent</div><span class="bdg harness">harness</span></div>
+              <div class="ds">部署编排 Agent：按环境下发变更，委派子 Agent 执行并回收结果。</div>
+              <div class="tags"><span class="tag">deployment</span><span class="tag">子 Agent 6</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">diagnosis_agent</div><span class="bdg harness">harness</span></div>
+              <div class="ds">故障诊断 Agent：并行发起多路排查，收敛为一份根因结论。</div>
+              <div class="tags"><span class="tag">diagnosis</span><span class="tag">子 Agent 6</span></div>
+              <div class="ft"><span class="dot run"></span>草稿 · 未发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">workwx_doc_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">读写企业微信智能文档与智能表格，按只读/可写策略暴露工具。</div>
+              <div class="tags"><span class="tag">doc</span><span class="tag">62 tools</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布 · 只读</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">workwx_notify_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">通过可用渠道向指定对象发送通知，并跟进送达情况。</div>
+              <div class="tags"><span class="tag">notify</span><span class="tag">webhook</span></div>
+              <div class="ft"><span class="dot err" style="background:#e0a421"></span>已发布 · 邮箱渠道未授权</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">data_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">按环境与数据源执行只读查询，返回结构化结果。</div>
+              <div class="tags"><span class="tag">sql</span><span class="tag">readonly</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">k8s_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">查询 K8s 组件、Pod、日志与事件，用于集群侧核查。</div>
+              <div class="tags"><span class="tag">k8s</span><span class="tag">readonly</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">nacos_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">读取与比对各环境 Nacos 配置，输出差异。</div>
+              <div class="tags"><span class="tag">nacos</span><span class="tag">config</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">code_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">在指定仓库与分支上做只读代码检查与定位。</div>
+              <div class="tags"><span class="tag">git</span><span class="tag">readonly</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">log_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">检索与聚合日志，按关键字与时间窗口定位异常。</div>
+              <div class="tags"><span class="tag">log</span></div>
+              <div class="ft"><span class="dot wait"></span>未注册实例</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">xxl_job_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">管理 XXL-Job 执行器与定时任务的下发与核对。</div>
+              <div class="tags"><span class="tag">xxl-job</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+            <div class="card">
+              <div class="r1"><div class="nm">rag_agent</div><span class="bdg react">react</span></div>
+              <div class="ds">基于知识库检索并给出带出处的回答。</div>
+              <div class="tags"><span class="tag">rag</span></div>
+              <div class="ft"><span class="dot ok"></span>已发布</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Agent 详情 ============ -->
+        <section class="page" id="p-agent">
+          <div class="row" style="margin-bottom:14px">
+            <div class="btn ghost sm" data-go="agents">← 返回 Agents</div>
+            <span class="hint">/</span>
+            <span class="hint" style="color:#16161c;font-weight:560">workwx_doc_agent</span>
+          </div>
+          <div class="hd" style="margin-bottom:16px">
+            <div>
+              <div class="row" style="gap:10px;margin-bottom:6px">
+                <h1 style="margin:0">workwx_doc_agent</h1>
+                <span class="bdg react">react</span>
+                <span class="bdg ok">已发布</span>
+              </div>
+              <div class="sub" style="margin:0">读写企业微信智能文档与智能表格。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">测试运行</button>
+              <button class="btn ghost">查看执行链路</button>
+              <button class="btn">保存并发布</button>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <div class="tab on" data-tab="t1">概览</div>
+            <div class="tab" data-tab="t2">Prompt</div>
+            <div class="tab" data-tab="t3">工具 <i style="font-style:normal;font-size:11px;color:#93939f">62</i></div>
+            <div class="tab" data-tab="t4">Skills</div>
+            <div class="tab" data-tab="t5">MCP 服务</div>
+            <div class="tab" data-tab="t6">Middleware</div>
+            <div class="tab" data-tab="t7">子 Agent</div>
+          </div>
+
+          <div class="tabpage on" data-tabpage="t1">
+            <div class="split">
+              <div>
+                <div class="pane">
+                  <div class="ph">运行配置</div>
+                  <div class="pb">
+                    <dl class="kv">
+                      <dt>类型</dt><dd>ReActAgent · maxIters 50</dd>
+                      <dt>模型</dt><dd>deepseek-v4-flash · reasoning-effort low</dd>
+                      <dt>工作区</dt><dd class="mono">workspace/agents/workwx_doc_agent</dd>
+                      <dt>状态存储</dt><dd>MySQL · state_store.workwx_doc_agent</dd>
+                      <dt>定义来源</dt><dd>Nacos · dg-claw-dev / agent.docs</dd>
+                      <dt>发布版本</dt><dd class="mono">v12 · 2026-09-17 22:04</dd>
+                    </dl>
+                  </div>
+                </div>
+                <div class="pane">
+                  <div class="ph">能力绑定</div>
+                  <div class="pb">
+                    <div class="row wrap" style="gap:8px">
+                      <span class="tag">写操作已关闭</span>
+                      <span class="tag">62 个工具</span>
+                      <span class="tag">3 个 Skill</span>
+                      <span class="tag">1 个 MCP 服务</span>
+                      <span class="tag">4 层 Middleware</span>
+                    </div>
+                    <div class="note mt">当前为<b>只读模式</b>：文档与表格的新增、修改、删除类工具全部关闭，调用时会被权限引擎拒绝并返回明确原因。</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="pane">
+                  <div class="ph">最近执行</div>
+                  <div class="pb" style="padding:0">
+                    <div class="runitem"><div class="a"><span class="dot ok"></span><b>读取花名册</b></div><div class="b">6.2s · 31k token</div></div>
+                    <div class="runitem"><div class="a"><span class="dot ok"></span><b>读取工时表</b></div><div class="b">9.4s · 52k token</div></div>
+                    <div class="runitem"><div class="a"><span class="dot err"></span><b>写入备注</b></div><div class="b">被只读策略拒绝</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabpage" data-tabpage="t2">
+            <div class="split">
+              <div class="pane">
+                <div class="ph">System Prompt<span class="rt">只描述能力与职责，不写具体任务</span></div>
+                <div class="pb">
+                  <textarea style="width:100%;height:300px;border:1px solid var(--bd);border-radius:9px;padding:13px;font:12.5px/1.75 var(--mono);resize:vertical;color:var(--t1);background:#fff;outline:none" spellcheck="false"># 角色
+你是企业微信文档能力代理，负责在授权范围内读取与整理在线文档、智能表格中的数据。
+
+# 职责
+- 定位并读取指定文档 / 智能表格的结构与记录
+- 按条件筛选、翻页、汇总结构化数据
+- 在只读策略下不执行任何写入操作
+
+# 边界
+- 不臆造文档内容；查询失败时明确说明失败原因
+- 数据量大时按页处理，不假设一次能取回全量
+- 引用数据时保留来源标识</textarea>
+                  <div class="note mt">Prompt 中<b>不得出现具体业务任务描述</b>（如“核对工时”），具体流程由 Skill 承载，参数由调用方传入。</div>
+                </div>
+              </div>
+              <div>
+                <div class="pane">
+                  <div class="ph">加载链路</div>
+                  <div class="pb">
+                    <dl class="kv">
+                      <dt>来源</dt><dd>Nacos agent.docs</dd>
+                      <dt>本地缓存</dt><dd>workspace/agents/*.md</dd>
+                      <dt>热更新</dt><dd><span class="bdg ok">已开启</span></dd>
+                      <dt>生效方式</dt><dd>重建 Agent 实例后替换</dd>
+                    </dl>
+                  </div>
+                </div>
+                <div class="pane">
+                  <div class="ph">历史版本</div>
+                  <div class="pb" style="padding:0">
+                    <div class="runitem"><div class="a"><b>v12</b><span class="bdg ok">当前</span></div><div class="b">2026-09-17 22:04 · admin</div></div>
+                    <div class="runitem"><div class="a"><b>v11</b></div><div class="b">2026-09-16 18:20 · admin</div><div class="row" style="margin-top:6px"><button class="btn ghost sm">对比</button><button class="btn ghost sm">回滚</button></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabpage" data-tabpage="t3">
+            <div class="row" style="margin-bottom:12px">
+              <div class="fsrch" style="margin:0"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg><input placeholder="搜索工具"></div>
+              <span class="hint">共 62 个 · 已启用 58 · 只读 55</span>
+              <div style="margin-left:auto" class="row"><button class="btn ghost sm">全部启用</button><button class="btn ghost sm">仅保留只读</button></div>
+            </div>
+            <table class="tbl">
+              <thead><tr><th style="width:34px"></th><th>工具名</th><th>来源</th><th>类型</th><th>说明</th><th style="width:80px;text-align:right">启用</th></tr></thead>
+              <tbody>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">smartsheet_records_list</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td>分页列出智能表格记录</td><td style="text-align:right"><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">smartsheet_fields_list</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td>读取表格字段结构</td><td style="text-align:right"><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">doc_content_get</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td>读取在线文档正文</td><td style="text-align:right"><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">doc_list</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td>按条件搜索文档</td><td style="text-align:right"><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">smartsheet_records_add</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg rw">写</span></td><td>新增表格记录</td><td style="text-align:right"><span class="sw off" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">smartsheet_records_update</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg rw">写</span></td><td>更新表格记录</td><td style="text-align:right"><span class="sw off" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td></td><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">doc_create</td><td><span class="tag">workwx-doc-mcp</span></td><td><span class="bdg rw">写</span></td><td>新建在线文档</td><td style="text-align:right"><span class="sw off" onclick="this.classList.toggle('off')"></span></td></tr>
+              </tbody>
+            </table>
+            <div class="note mt">被关闭的工具<b>不会注入</b>到模型上下文；若模型仍尝试调用，权限引擎会返回 <span class="mono">denied</span> 并说明原因，而不是静默失败。</div>
+          </div>
+
+          <div class="tabpage" data-tabpage="t4">
+            <div class="grid">
+              <div class="card" style="cursor:default">
+                <div class="r1"><div class="nm">read-roster</div><span class="bdg ok">已发布</span></div>
+                <div class="ds">从指定文档定位并读取结构化名册，输出统一人员字段。</div>
+                <div class="tags"><span class="tag">SKILL.md</span><span class="tag">只读</span></div>
+              </div>
+              <div class="card" style="cursor:default">
+                <div class="r1"><div class="nm">read-timesheet</div><span class="bdg ok">已发布</span></div>
+                <div class="ds">按月份读取智能表格记录并规整为工时条目。</div>
+                <div class="tags"><span class="tag">SKILL.md</span><span class="tag">分页</span></div>
+              </div>
+              <div class="card" style="cursor:default">
+                <div class="r1"><div class="nm">resolve-doc-id</div><span class="bdg ok">已发布</span></div>
+                <div class="ds">按名称解析文档 / 表格的实际 ID，避免硬编码。</div>
+                <div class="tags"><span class="tag">SKILL.md</span></div>
+              </div>
+            </div>
+            <div class="note mt">Skill 承载<b>标准流程</b>，Prompt 承载<b>能力与边界</b>。两者分离后，同一个 Agent 可以复用于不同业务场景。</div>
+          </div>
+
+          <div class="tabpage" data-tabpage="t5">
+            <table class="tbl">
+              <thead><tr><th>服务</th><th>传输</th><th>地址</th><th class="num">工具</th><th>状态</th><th style="width:80px;text-align:right">启用</th></tr></thead>
+              <tbody>
+                <tr><td class="nm">workwx-doc-mcp</td><td>streamable-http</td><td class="mono">nacos://workwx-doc</td><td class="num">62</td><td><span class="bdg ok">已连接</span></td><td style="text-align:right"><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td class="nm">workwx-address-mcp</td><td>streamable-http</td><td class="mono">nacos://workwx-address</td><td class="num">1</td><td><span class="bdg ok">已连接</span></td><td style="text-align:right"><span class="sw on" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td class="nm">workwx-message-mcp</td><td>streamable-http</td><td class="mono">nacos://workwx-msg</td><td class="num">6</td><td><span class="bdg ok">已连接</span></td><td style="text-align:right"><span class="sw on" onclick="this.classList.toggle('off')"></span></td></tr>
+                <tr><td class="nm">workwx-email-mcp</td><td>streamable-http</td><td class="mono">nacos://workwx-email</td><td class="num">5</td><td><span class="bdg err">未授权 851008</span></td><td style="text-align:right"><span class="sw off" onclick="this.classList.toggle('off')"></span></td></tr>
+              </tbody>
+            </table>
+            <div class="note mt">MCP 按<b>服务粒度</b>启停，工具白名单按<b>工具粒度</b>裁剪。切到 <span class="mono">仅只读</span> 会自动关闭全部写类工具。</div>
+          </div>
+
+          <div class="tabpage" data-tabpage="t6">
+            <div class="split">
+              <div class="pane">
+                <div class="ph">Middleware 链<span class="rt">顺序即外层顺序</span></div>
+                <div class="pb" style="padding:0">
+                  <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">1</span><div style="flex:1"><b style="font-size:12.5px">AgentRunTraceMiddleware</b><div class="hint">采集 5 个阶段的全量输入输出</div></div><span class="bdg ok">启用</span></div></div>
+                  <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">2</span><div style="flex:1"><b style="font-size:12.5px">PermissionMiddleware</b><div class="hint">工具权限裁决：allow / ask / deny</div></div><span class="bdg ok">启用</span></div></div>
+                  <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">3</span><div style="flex:1"><b style="font-size:12.5px">CompactionMiddleware</b><div class="hint">上下文压缩与工具结果卸载</div></div><span class="bdg ok">启用</span></div></div>
+                  <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">4</span><div style="flex:1"><b style="font-size:12.5px">InboxMiddleware</b><div class="hint">任务收件箱与唤醒</div></div><span class="bdg ok">启用</span></div></div>
+                </div>
+                <div class="pb" style="border-top:1px solid var(--bd)"><button class="btn ghost sm">+ 添加 Middleware</button></div>
+              </div>
+              <div>
+                <div class="pane">
+                  <div class="ph">执行顺序示意</div>
+                  <div class="pb">
+                    <div class="hint" style="line-height:2">
+                      <span class="mono">1</span> AgentRunTraceMiddleware<br>
+                      <span style="color:#c3c3cd;padding-left:5px">└</span> <span class="mono">2</span> PermissionMiddleware<br>
+                      <span style="color:#c3c3cd;padding-left:24px">└</span> <span class="mono">3</span> CompactionMiddleware<br>
+                      <span style="color:#c3c3cd;padding-left:43px">└</span> <span class="mono">4</span> InboxMiddleware<br>
+                      <span style="color:#c3c3cd;padding-left:62px">└</span> <span style="color:#16161c">Agent 核心</span>
+                    </div>
+                    <div class="note mt">列表首位在最外层：<b>1 号能看到压缩前的原始上下文</b>。调整顺序会改变可观测与裁剪行为。</div>
+                  </div>
+                </div>
+                <div class="pane">
+                  <div class="ph">可用 Middleware</div>
+                  <div class="pb" style="padding:0">
+                    <div class="runitem"><div class="row"><div style="flex:1"><b style="font-size:12.5px">OtelTracingMiddleware</b><div class="hint">OpenTelemetry span 输出</div></div><button class="btn ghost sm">添加</button></div></div>
+                    <div class="runitem"><div class="row"><div style="flex:1"><b style="font-size:12.5px">RateLimitMiddleware</b><div class="hint">onModelCall 维度限流</div></div><button class="btn ghost sm">添加</button></div></div>
+                    <div class="runitem"><div class="row"><div style="flex:1"><b style="font-size:12.5px">GracefulShutdownMiddleware</b><div class="hint">优雅停机（框架内置）</div></div><span class="bdg off">不可移除</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabpage" data-tabpage="t7">
+            <div class="empty" style="border:1px dashed var(--bd2);border-radius:12px;background:#fcfcfd">
+              <b style="display:block;color:#16161c;margin-bottom:6px">ReAct Agent 不支持子 Agent</b>
+              只有 Harness Agent 可以声明并调度子 Agent。<br>
+              前往 <span class="mono">Harness 编排</span> 查看可调度的子 Agent 与并发策略。
+            </div>
+          </div>
+        </section>        <!-- ============ 执行链路 ============ -->
+        <section class="page" id="p-traces">
+          <div class="hd">
+            <div>
+              <h1>执行链路</h1>
+              <div class="sub">每次执行的完整调用树：Agent 阶段、模型调用、工具调用与子 Agent 派发。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">导出 JSON</button>
+              <div class="sw on" title="实时刷新" onclick="this.classList.toggle('off')"></div>
+            </div>
+          </div>
+
+          <div class="split wide" style="grid-template-columns:252px 1fr 384px">
+            <!-- run 列表 -->
+            <div class="pane runs">
+              <div class="ph">最近执行<span class="rt">2s 刷新</span></div>
+              <div class="runitem sel">
+                <div class="a"><span class="dot run"></span><b>workwx_batch_agent</b></div>
+                <div class="b">运行中 · 12.4s</div>
+              </div>
+              <div class="runitem">
+                <div class="a"><span class="dot ok"></span><b>deployment_agent</b></div>
+                <div class="b">48.2s · 318k</div>
+              </div>
+              <div class="runitem">
+                <div class="a"><span class="dot ok"></span><b>workwx_doc_agent</b></div>
+                <div class="b">6.2s · 31k</div>
+              </div>
+              <div class="runitem">
+                <div class="a"><span class="dot err"></span><b>diagnosis_agent</b></div>
+                <div class="b">22.9s · 96k</div>
+              </div>
+              <div class="runitem">
+                <div class="a"><span class="dot ok"></span><b>workwx_notify_agent</b></div>
+                <div class="b">3.3s · 8k</div>
+              </div>
+              <div class="runitem">
+                <div class="a"><span class="dot ok"></span><b>nacos_agent</b></div>
+                <div class="b">11.7s · 74k</div>
+              </div>
+            </div>
+
+            <!-- 树 -->
+            <div>
+              <div class="pane" style="margin-bottom:14px">
+                <div class="pb" style="padding:13px 15px">
+                  <div class="row" style="margin-bottom:9px">
+                    <span class="bdg harness">harness</span>
+                    <b style="font-size:14px">workwx_batch_agent</b>
+                    <span class="dot run" style="margin-left:4px"></span>
+                    <span class="hint" style="margin-left:auto">runId <span class="mono" style="font-size:11px">r_8f3c21a9</span></span>
+                  </div>
+                  <dl class="kv" style="grid-template-columns:74px 1fr 74px 1fr">
+                    <dt>会话</dt><dd class="mono">single-wo7U1…-2026-09-20</dd>
+                    <dt>用户</dt><dd class="mono">wo7U1ZEQAA…</dd>
+                    <dt>来源</dt><dd>Channels · 企微 bot</dd>
+                    <dt>总耗时</dt><dd>24.8s · 迭代 6</dd>
+                    <dt>Token</dt><dd>412k（缓存 61%）</dd>
+                    <dt>状态</dt><dd><span class="bdg ok">运行中</span></dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div class="tree" id="traceTree">
+                <div class="trow sel" data-path="1" data-lv="1" onclick="pickNode(this,'1')">
+                  <div class="ind" style="padding-left:14px"><div class="tw op" onclick="twist(event,this,'1')">▶</div></div>
+                  <span class="dot run"></span>
+                  <span class="nm">workwx_batch_agent</span>
+                  <span class="src">source: null</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:0;width:100%;background:#b9b9e8"></i></div>
+                  <div class="ms">24.8s</div>
+                  <div class="tk">412k</div>
+                </div>
+
+                <div class="trow" data-path="1.1" data-lv="2" onclick="pickNode(this,'1.1')">
+                  <div class="ind" style="padding-left:30px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">reasoning #1</span>
+                  <span class="src">deepseek-v4-flash</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:0;width:29%;background:#c9c9ea"></i></div>
+                  <div class="ms">7.2s</div>
+                  <div class="tk">61k</div>
+                </div>
+
+                <div class="trow" data-path="1.2" data-lv="2" onclick="pickNode(this,'1.2')">
+                  <div class="ind" style="padding-left:30px"><div class="tw op" onclick="twist(event,this,'1.2')">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">acting · agent_spawn</span>
+                  <span class="src">wo7U1…/workwx_doc_agent</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:5%;width:25%;background:#9d9de0"></i></div>
+                  <div class="ms">6.2s</div>
+                  <div class="tk">31k</div>
+                </div>
+
+                <div class="trow" data-path="1.2.1" data-lv="3" onclick="pickNode(this,'1.2.1')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">reasoning</span>
+                  <span class="src">skill: read-roster</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:8%;width:9%;background:#d4d4ee"></i></div>
+                  <div class="ms">2.1s</div>
+                  <div class="tk">9k</div>
+                </div>
+
+                <div class="trow" data-path="1.2.2" data-lv="3" onclick="pickNode(this,'1.2.2')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">tool · smartsheet_records_list</span>
+                  <span class="src">workwx-doc-mcp</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:18%;width:11%;background:#8fd0ac"></i></div>
+                  <div class="ms">3.4s</div>
+                  <div class="tk">—</div>
+                </div>
+
+                <div class="trow" data-path="1.3" data-lv="2" onclick="pickNode(this,'1.3')">
+                  <div class="ind" style="padding-left:30px"><div class="tw op" onclick="twist(event,this,'1.3')">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">acting · agent_spawn</span>
+                  <span class="src">wo7U1…/workwx_doc_agent</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:30%;width:38%;background:#9d9de0"></i></div>
+                  <div class="ms">9.4s</div>
+                  <div class="tk">52k</div>
+                </div>
+
+                <div class="trow" data-path="1.3.1" data-lv="3" onclick="pickNode(this,'1.3.1')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">reasoning</span>
+                  <span class="src">skill: read-timesheet</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:30%;width:14%;background:#d4d4ee"></i></div>
+                  <div class="ms">3.2s</div>
+                  <div class="tk">14k</div>
+                </div>
+
+                <div class="trow" data-path="1.3.2" data-lv="3" onclick="pickNode(this,'1.3.2')">
+                  <div class="ind" style="padding-left:46px"><div class="tw op" onclick="twist(event,this,'1.3.2')">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">tool · smartsheet_records_list ×4</span>
+                  <span class="src">分页</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:46%;width:22%;background:#8fd0ac"></i></div>
+                  <div class="ms">5.6s</div>
+                  <div class="tk">—</div>
+                </div>
+
+                <div class="trow" data-path="1.4" data-lv="2" onclick="pickNode(this,'1.4')">
+                  <div class="ind" style="padding-left:30px"><div class="tw op" onclick="twist(event,this,'1.4')">▶</div></div>
+                  <span class="dot run"></span>
+                  <span class="nm kind">acting · 批量派发 ×3</span>
+                  <span class="src">general-purpose</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:70%;width:26%;background:#f0d59a"></i></div>
+                  <div class="ms">6.4s</div>
+                  <div class="tk">96k</div>
+                </div>
+
+                <div class="trow" data-path="1.4.1" data-lv="3" onclick="pickNode(this,'1.4.1')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">sub #1 · 核对 34 人</span>
+                  <span class="src">sub-b46441fb</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:71%;width:8%;background:#8fd0ac"></i></div>
+                  <div class="ms">2.1s</div>
+                  <div class="tk">11k</div>
+                </div>
+
+                <div class="trow" data-path="1.4.2" data-lv="3" onclick="pickNode(this,'1.4.2')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot ok"></span>
+                  <span class="nm kind">sub #2 · 核对 33 人</span>
+                  <span class="src">sub-e591566d</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:73%;width:7%;background:#8fd0ac"></i></div>
+                  <div class="ms">1.8s</div>
+                  <div class="tk">10k</div>
+                </div>
+
+                <div class="trow" data-path="1.4.3" data-lv="3" onclick="pickNode(this,'1.4.3')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot run"></span>
+                  <span class="nm kind">sub #3 · 核对 33 人</span>
+                  <span class="src">sub-8c1d0a77</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:85%;width:11%;background:#f0d59a"></i></div>
+                  <div class="ms">2.4s</div>
+                  <div class="tk">—</div>
+                </div>
+
+                <div class="trow" data-path="1.5" data-lv="2" onclick="pickNode(this,'1.5')">
+                  <div class="ind" style="padding-left:30px"><div class="tw op" onclick="twist(event,this,'1.5')">▶</div></div>
+                  <span class="dot wait"></span>
+                  <span class="nm kind">acting · agent_spawn</span>
+                  <span class="src">wo7U1…/workwx_notify_agent</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:0;width:0%;background:#d9d9e6"></i></div>
+                  <div class="ms">—</div>
+                  <div class="tk">—</div>
+                </div>
+
+                <div class="trow" data-path="1.5.1" data-lv="3" onclick="pickNode(this,'1.5.1')">
+                  <div class="ind" style="padding-left:46px"><div class="tw" style="visibility:hidden">▶</div></div>
+                  <span class="dot wait"></span>
+                  <span class="nm kind">tool · workwx_webhook_send</span>
+                  <span class="src">待执行</span>
+                  <div class="sp"></div>
+                  <div class="bar"><i style="left:0;width:0%;background:#d9d9e6"></i></div>
+                  <div class="ms">—</div>
+                  <div class="tk">—</div>
+                </div>
+              </div>
+              <div class="legend">
+                <span><i style="background:#b9b9e8"></i>Agent 阶段</span>
+                <span><i style="background:#d4d4ee"></i>模型调用</span>
+                <span><i style="background:#8fd0ac"></i>工具调用</span>
+                <span><i style="background:#f0d59a"></i>运行中 / 等待</span>
+                <span style="margin-left:auto">点击左侧 ▶ 折叠子树 · 点击行查看输入输出</span>
+              </div>
+            </div>
+
+            <!-- 节点详情 -->
+            <div>
+              <div class="pane">
+                <div class="ph">节点详情<span class="rt" id="nodePath">1.4.1</span></div>
+                <div class="pb">
+                  <dl class="kv" style="margin-bottom:14px">
+                    <dt>类型</dt><dd>子 Agent 调用（agent_spawn）</dd>
+                    <dt>子 Agent</dt><dd>general-purpose-subagent</dd>
+                    <dt>source</dt><dd class="mono">sub-b46441fb</dd>
+                    <dt>耗时</dt><dd>2.1s · 耗时占比 8.5%</dd>
+                    <dt>Token</dt><dd>11,204（in 9,812 / out 1,392）</dd>
+                    <dt>状态</dt><dd><span class="bdg ok">success</span></dd>
+                  </dl>
+                  <div class="sec">
+                    <h3>输入 · task</h3>
+                    <pre class="j">{
+  "agent_id": "general-purpose-subagent",
+  "timeout_seconds": 300,
+  "task": "核对以下人员的当月工时填报情况：
+    名单：张伟(1001), 李娜(1002), 王强(1003) …
+    工作日：2026-09-01 ~ 2026-09-18 共 13 天
+    规则：工作日未填写 → 标记缺失
+    返回：每人一条 {工号, 姓名, 已填天数, 缺失日期[], 结论}"
+}</pre>
+                  </div>
+                  <div class="sec">
+                    <h3>输出 · reply</h3>
+                    <pre class="j">{
+  "status": "ok",
+  "result": [
+    { "工号": "1001", "姓名": "张伟", "已填": 11,
+      "缺失": ["2026-09-14", "2026-09-17"], "结论": "缺填" },
+    { "工号": "1002", "姓名": "李娜", "已填": 13,
+      "缺失": [], "结论": "正常" }
+  ],
+  "checked": 34
+}</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Harness 编排 ============ -->
+        <section class="page" id="p-harness">
+          <div class="hd">
+            <div>
+              <h1>Harness 编排</h1>
+              <div class="sub">声明 Harness Agent 可以调度哪些子 Agent，以及并发、超时与结果收敛策略。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">校验</button>
+              <button class="btn">保存并发布</button>
+            </div>
+          </div>
+
+          <div class="split">
+            <div>
+              <div class="pane">
+                <div class="ph">调度拓扑<span class="rt">workwx_batch_agent</span></div>
+                <div class="canvas" style="border-radius:0;border:none">
+                  <div class="fcol">
+                    <div class="node pri" style="min-width:210px">
+                      <b>workwx_batch_agent</b>
+                      <span>harness · maxIters 50</span>
+                    </div>
+                    <div class="conn" style="height:26px"></div>
+                    <div style="width:86%;height:1.5px;background:#d8d8e2"></div>
+                    <div class="conn" style="height:20px"></div>
+                    <div class="rowgap" style="width:100%">
+                      <div class="fcol">
+                        <div class="node"><b>workwx_doc_agent</b><span>react · 只读</span></div>
+                        <span class="hint" style="font-size:11px;margin-top:7px">读取名册 / 工时表</span>
+                      </div>
+                      <div class="fcol">
+                        <div class="node"><b>workwx_notify_agent</b><span>react · webhook</span></div>
+                        <span class="hint" style="font-size:11px;margin-top:7px">消息与邮件通知</span>
+                      </div>
+                      <div class="fcol">
+                        <div class="node dash"><b>general-purpose-subagent</b><span>内置 · 按需实例化 ×N</span></div>
+                        <span class="hint" style="font-size:11px;margin-top:7px">批量分片处理</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="legend" style="justify-content:center">
+                    <span><i style="background:#fff;border:1.5px solid #5b5bd6"></i>Harness 主 Agent</span>
+                    <span><i style="background:#fff;border:1.5px solid #dedee6"></i>已声明子 Agent</span>
+                    <span><i style="background:#fcfcfd;border:1.5px dashed #dedee6"></i>内置，按需实例化</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pane">
+                <div class="ph">子 Agent 声明</div>
+                <table class="tbl" style="border:none;border-radius:0">
+                  <thead><tr><th>agent_id</th><th>工作区</th><th>单次迭代</th><th>超时</th><th>启用</th></tr></thead>
+                  <tbody>
+                    <tr><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">workwx_doc_agent</td><td>isolated</td><td class="num">20</td><td class="num">300s</td><td><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                    <tr><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">workwx_notify_agent</td><td>isolated</td><td class="num">12</td><td class="num">300s</td><td><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                    <tr><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">workwx_address_agent</td><td>isolated</td><td class="num">8</td><td class="num">120s</td><td><span class="sw off" onclick="this.classList.toggle('off')"></span></td></tr>
+                    <tr><td class="nm mono" style="font-family:var(--mono);font-size:11.5px">general-purpose-subagent</td><td>shared</td><td class="num">—</td><td class="num">600s</td><td><span class="sw" onclick="this.classList.toggle('off')"></span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <div class="pane">
+                <div class="ph">调度策略</div>
+                <div class="pb">
+                  <dl class="kv">
+                    <dt>并发上限</dt><dd>5</dd>
+                    <dt>分片策略</dt><dd>按名单分片，每片 ≤ 35 人</dd>
+                    <dt>单次超时</dt><dd>300s，超时转后台任务</dd>
+                    <dt>失败重试</dt><dd>2 次，指数退避</dd>
+                    <dt>结果收敛</dt><dd>全部子任务结束或超时后汇总</dd>
+                    <dt>透传事件</dt><dd><span class="bdg ok">开启</span></dd>
+                  </dl>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">为什么这样拆</div>
+                <div class="pb">
+                  <div class="hint" style="line-height:1.8">
+                    一次模型调用里塞进 100 人的全量数据会超上下文，也无法并行。拆成固定分片后，每个子 Agent 只处理 30 余人，上下文可控、可并行、单点失败不影响整体。
+                  </div>
+                  <div class="note mt">并发上限受 <b>目标系统限流</b> 约束（webhook 20 条/分钟）。</div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">发布状态</div>
+                <div class="pb">
+                  <dl class="kv">
+                    <dt>定义来源</dt><dd>Nacos dg-claw-dev</dd>
+                    <dt>本地草稿</dt><dd><span class="bdg rw">有未发布变更</span></dd>
+                    <dt>线上版本</dt><dd class="mono">v7</dd>
+                  </dl>
+                  <button class="btn mt2" style="width:100%;justify-content:center">发布到 Nacos</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- ============ 会话记录 ============ -->
+        <section class="page" id="p-sessions">
+          <div class="hd">
+            <div>
+              <h1>会话记录</h1>
+              <div class="sub">每个用户 / 群与 Agent 的会话，以及落盘的状态快照。会话 ID 同时也是状态目录名。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">清理 30 天前</button>
+              <button class="btn ghost">导出</button>
+            </div>
+          </div>
+
+          <div class="chips">
+            <div class="chip on">全部 <i>7</i></div>
+            <div class="chip">单聊 <i>5</i></div>
+            <div class="chip">群聊 <i>1</i></div>
+            <div class="chip">子会话 <i>1</i></div>
+            <div class="fsrch">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg>
+              <input placeholder="按会话 ID / 用户搜索">
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>会话 ID</th><th>Agent</th><th>来源</th><th class="num">轮次</th><th>最近活动</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="mono">single_wo7U1ZEQAApziTCwT6jow9UKLs0xrqlw_2026-09-18</td>
+                <td class="nm">workwx_batch_agent</td><td>企微 bot · 单聊</td>
+                <td class="num">6</td><td>刚刚</td><td><span class="dot run" style="display:inline-block;margin-right:6px"></span>运行中</td>
+              </tr>
+              <tr>
+                <td class="mono">sub_b46441fb</td>
+                <td class="nm">workwx_doc_agent</td><td>父会话派发</td>
+                <td class="num">3</td><td>2 分钟前</td><td><span class="bdg ok">成功</span></td>
+              </tr>
+              <tr>
+                <td class="mono">single_ou_87a0c4d1b9e2f3a5c7d8e9f0a1b2c3d4_2026-09-18</td>
+                <td class="nm">deployment_agent</td><td>企微 bot · 单聊</td>
+                <td class="num">12</td><td>11 分钟前</td><td><span class="bdg ok">成功</span></td>
+              </tr>
+              <tr>
+                <td class="mono">group_cmr-prod</td>
+                <td class="nm">diagnosis_agent</td><td>群聊 cmr-prod</td>
+                <td class="num">4</td><td>26 分钟前</td><td><span class="bdg err">失败</span></td>
+              </tr>
+              <tr>
+                <td class="mono">single_gw-f9912c3d4e5f6a7b8c9d0e1f2a3b4936_2026-09-18</td>
+                <td class="nm">workwx_notify_agent</td><td>父会话派发</td>
+                <td class="num">2</td><td>31 分钟前</td><td><span class="bdg ok">成功</span></td>
+              </tr>
+              <tr>
+                <td class="mono">single_wo7U1ZEQAApziTCwT6jow9UKLs0xrqlw_2026-09-17</td>
+                <td class="nm">workwx_batch_agent</td><td>企微 bot · 单聊</td>
+                <td class="num">9</td><td>昨天 22:04</td><td><span class="bdg ok">成功</span></td>
+              </tr>
+              <tr>
+                <td class="mono">single_admin_local_2026-09-17</td>
+                <td class="nm">nacos_agent</td><td>控制台调试</td>
+                <td class="num">2</td><td>昨天 18:22</td><td><span class="bdg off">已结束</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2" style="grid-template-columns:1fr 384px">
+            <div class="pane">
+              <div class="ph">状态快照文件<span class="rt">点击行查看</span></div>
+              <table class="tbl" style="border:none;border-radius:0">
+                <thead><tr><th>会话</th><th>快照</th><th class="num">大小</th><th>写入时间</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">single_wo7U1…_2026-09-18</td><td class="mono">agents/workwx_batch_agent/sessions/…jsonl</td><td class="num">412 KB</td><td>刚刚</td></tr>
+                  <tr><td class="mono">single_wo7U1…_2026-09-18</td><td class="mono">agents/workwx_batch_agent/tasks/…json</td><td class="num">18 KB</td><td>刚刚</td></tr>
+                  <tr><td class="mono">sub_b46441fb</td><td class="mono">single/statestore/workwx_doc_agent/…/agent_state.json</td><td class="num">96 KB</td><td>2 分钟前</td></tr>
+                  <tr><td class="mono">group_cmr-prod</td><td class="mono">single/statestore/diagnosis_agent/…/agent_state.json</td><td class="num">214 KB</td><td>26 分钟前</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">目录约定</div>
+                <div class="pb">
+                  <div class="hint" style="line-height:1.9">
+                    单聊状态：<br><span class="mono" style="font-size:11px">workspace/single/statestore/&lt;agent&gt;/&lt;user&gt;/agent_state.json</span><br>
+                    子会话：<span class="mono" style="font-size:11px">…/sub-&lt;uuid&gt;/agent_state.json</span><br>
+                    派发关系：<span class="mono" style="font-size:11px">agents/&lt;agent&gt;/tasks/&lt;parentSession&gt;.json</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">注意事项</div>
+                <div class="pb">
+                  <div class="note">
+                    会话 ID 里的 <span class="mono">:</span> 在 Windows 上会触发
+                    <span class="mono">InvalidPathException</span>，落盘前已统一归一化为 <span class="mono">_</span>。
+                    当前会话 ID 同时充当目录名，改名即等于迁移状态，需要谨慎。
+                  </div>
+                  <div class="note mt">
+                    状态存储目前是<b>本地文件</b>，多实例部署时会各写各的。跨实例共享需要换共享存储或集中式 StateStore。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 工作流 ============ -->
+        <section class="page" id="p-workflows">
+          <div class="hd">
+            <div>
+              <h1>工作流</h1>
+              <div class="sub">把「什么时候、用什么口径、派给哪个 Agent」固化成模板，供定时任务与人工触发复用。</div>
+            </div>
+            <div class="row"><button class="btn">+ 新建工作流</button></div>
+          </div>
+
+          <div class="chips">
+            <div class="chip on">全部 <i>4</i></div>
+            <div class="chip">定时 <i>1</i></div>
+            <div class="chip">事件触发 <i>2</i></div>
+            <div class="chip">手动 <i>1</i></div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>工作流</th><th>触发</th><th>入口 Agent</th><th>链路</th><th>最近执行</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="nm">月度工时填报核对</td>
+                <td><span class="tag">cron 0 9 * * 1-5</span></td>
+                <td class="mono">workwx_batch_agent</td>
+                <td class="mono" style="font-size:11px">→ workwx_doc_agent → workwx_notify_agent</td>
+                <td>今天 09:00 · 24.8s</td>
+                <td><span class="bdg harness">已发布 v7</span></td>
+              </tr>
+              <tr>
+                <td class="nm">生产环境发布</td>
+                <td><span class="tag">企微单聊指令</span></td>
+                <td class="mono">deployment_agent</td>
+                <td class="mono" style="font-size:11px">→ nacos_agent → k8s_agent</td>
+                <td>11 分钟前 · 48.2s</td>
+                <td><span class="bdg harness">已发布 v3</span></td>
+              </tr>
+              <tr>
+                <td class="nm">故障诊断</td>
+                <td><span class="tag">群聊 @机器人</span></td>
+                <td class="mono">diagnosis_agent</td>
+                <td class="mono" style="font-size:11px">→ k8s_agent → log_agent</td>
+                <td>26 分钟前 · 22.9s <span class="bdg err">失败</span></td>
+                <td><span class="bdg harness">已发布 v5</span></td>
+              </tr>
+              <tr>
+                <td class="nm">交易异常巡检</td>
+                <td><span class="tag">手动</span></td>
+                <td class="mono">trading_anomaly_agent</td>
+                <td class="mono" style="font-size:11px">→ magic-api → workwx-send-msg</td>
+                <td>昨天 20:10 · 12.1s</td>
+                <td><span class="bdg rw">草稿</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2">
+            <div class="pane">
+              <div class="ph">月度工时填报核对<span class="rt">v7</span></div>
+              <div class="pb">
+                <div class="steps" style="flex-direction:column;align-items:flex-start;gap:10px;font-size:12px">
+                  <div><span class="ordnum">1</span> 触发 · 工作日 09:00 由 XXL-Job 拉起</div>
+                  <div><span class="ordnum">2</span> workwx_batch_agent 读取 skill <span class="mono">batch-audit-and-notify</span>，取全量名单与当月应提交日</div>
+                  <div><span class="ordnum">3</span> 拆片（≤35 人/片）并发派发 workwx_doc_agent 核对工时表</div>
+                  <div><span class="ordnum">4</span> 父侧汇总缺失与不规范项，去重后交给 workwx_notify_agent</div>
+                  <div><span class="ordnum">5</span> 按有限流约束分批下发提醒，回写送达结果</div>
+                </div>
+                <div class="note mt">流程定义在 Skill 里，Prompt 只描述职责 —— 改口径不用改 Prompt，也不用重新发布 Agent。</div>
+              </div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">运行约束</div>
+                <div class="pb">
+                  <dl class="kv">
+                    <dt>并发</dt><dd>子 Agent ≤ 5，分批推进</dd>
+                    <dt>单批超时</dt><dd>300s</dd>
+                    <dt>下发限流</dt><dd>webhook 20 条/分钟</dd>
+                    <dt>幂等</dt><dd>按「对象 + 批次」去重</dd>
+                    <dt>重跑</dt><dd>跳过已下发对象</dd>
+                  </dl>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">产物</div>
+                <div class="pb" style="padding:0">
+                  <div class="runitem"><div class="a"><b>2026-09-timesheet-consolidated.md</b></div><div class="b">audit-results/ · 128 KB</div></div>
+                  <div class="runitem"><div class="a"><b>2026-09-dept-technical-solutions.md</b></div><div class="b">audit-results/ · 34 KB</div></div>
+                  <div class="runitem"><div class="a"><b>2026-08-timesheet-consolidated.md</b></div><div class="b">audit-results/ · 121 KB</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- ============ 工具 ============ -->
+        <section class="page" id="p-tools">
+          <div class="hd">
+            <div>
+              <h1>工具</h1>
+              <div class="sub">工具是 Agent 唯一的动作出口。这里登记全部本地工具与 MCP 工具，以及谁挂了它、是读还是写。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">导入 MCP 工具清单</button>
+              <button class="btn">+ 注册本地工具</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(196px,1fr));margin-bottom:20px">
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">本地工具</div><span class="bdg managed">Spring Bean</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">48</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">按 Bean 名挂到 agent 定义</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">MCP 工具</div><span class="bdg external">4 服务</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">74</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">doc 62 · message 6 · email 5 · address 1</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">写工具</div><span class="bdg rw">需授权</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">21</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">其余 101 个为只读</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">被白名单限制</div><span class="bdg off">未挂载</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">49</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">doc-mcp 62 个里只放开 13 个</div>
+            </div>
+          </div>
+
+          <div class="chips">
+            <div class="chip on">全部 <i>122</i></div>
+            <div class="chip">本地 <i>48</i></div>
+            <div class="chip">MCP <i>74</i></div>
+            <div class="chip"><span class="cdot" style="background:#187a45"></span>只读 <i>101</i></div>
+            <div class="chip"><span class="cdot" style="background:#8a6100"></span>写入 <i>21</i></div>
+            <div class="fsrch">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg>
+              <input placeholder="搜索工具名 / 挂载 Agent">
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>工具名</th><th>来源</th><th>权限</th><th>挂载方</th><th class="num">近 7 日调用</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">workday-query</td><td><span class="bdg managed">本地</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">workwx_doc_agent · workwx_batch_agent</td><td class="num">418</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">smartsheet_records_list</td><td><span class="bdg external">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">workwx_doc_agent</td><td class="num">1,204</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">smartsheet_fields_list</td><td><span class="bdg external">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">workwx_doc_agent</td><td class="num">312</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">sheet_ranges_get_submit</td><td><span class="bdg external">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">workwx_doc_agent</td><td class="num">86</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">smartsheet_records_query_submit</td><td><span class="bdg external">workwx-doc-mcp</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">workwx_doc_agent</td><td class="num">0</td><td><span class="bdg err">表未开 SQL</span></td></tr>
+              <tr><td class="mono">workwx-webhook-send</td><td><span class="bdg managed">本地</span></td><td><span class="bdg rw">写入</span></td><td class="mono" style="font-size:11px">workwx_notify_agent</td><td class="num">967</td><td><span class="bdg hosted">限流命中 12 次</span></td></tr>
+              <tr><td class="mono">workwx-send-msg</td><td><span class="bdg managed">本地</span></td><td><span class="bdg rw">写入</span></td><td class="mono" style="font-size:11px">workwx_notify_agent · trading_anomaly_agent</td><td class="num">203</td><td><span class="bdg off">不支持 @</span></td></tr>
+              <tr><td class="mono">mail_send</td><td><span class="bdg external">workwx-email-mcp</span></td><td><span class="bdg rw">写入</span></td><td class="mono" style="font-size:11px">workwx_notify_agent</td><td class="num">0</td><td><span class="bdg err">851008 未授权</span></td></tr>
+              <tr><td class="mono">address_search</td><td><span class="bdg external">workwx-address-mcp</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">workwx_notify_agent</td><td class="num">528</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">git-worktree-add</td><td><span class="bdg managed">本地</span></td><td><span class="bdg rw">写入</span></td><td class="mono" style="font-size:11px">code_agent</td><td class="num">46</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">publish-nacos-config</td><td><span class="bdg managed">本地</span></td><td><span class="bdg rw">写入</span></td><td class="mono" style="font-size:11px">nacos_agent · deployment_agent</td><td class="num">31</td><td><span class="bdg hosted">需人工确认</span></td></tr>
+              <tr><td class="mono">sql-query</td><td><span class="bdg managed">本地</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">data_agent</td><td class="num">274</td><td><span class="bdg hosted">限 SELECT</span></td></tr>
+              <tr><td class="mono">intelligent-retrieval</td><td><span class="bdg managed">本地</span></td><td><span class="bdg ro">只读</span></td><td class="mono" style="font-size:11px">rag_agent</td><td class="num">612</td><td><span class="bdg ok">正常</span></td></tr>
+              <tr><td class="mono">add-queue</td><td><span class="bdg managed">本地</span></td><td><span class="bdg rw">写入</span></td><td class="mono" style="font-size:11px">rabbitmq_agent</td><td class="num">14</td><td><span class="bdg ok">正常</span></td></tr>
+            </tbody>
+          </table>
+          <div class="hint mt">共 122 个工具，此处展示调用量最高的 14 个。</div>
+        </section>
+
+        <!-- ============ Skills ============ -->
+        <section class="page" id="p-skills">
+          <div class="hd">
+            <div>
+              <h1>Skills</h1>
+              <div class="sub">流程、口径与硬约束都写在这里。Prompt 只描述职责，改流程不动 Prompt。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">同步到 Nacos</button>
+              <button class="btn">+ 新建 Skill</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(196px,1fr));margin-bottom:20px">
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">Skill 总数</div></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">34</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">覆盖 11 个 Agent</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">作用域</div><span class="bdg off">本地文件</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">2</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">single/skills · harness/&lt;agent&gt;/skills</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">加载方式</div></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">按需</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">harness 启动拉 manifest，用时读 SKILL.md</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">缓存</div><span class="bdg hosted">需关注</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">1</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">.skills-cache 无失效策略</div>
+            </div>
+          </div>
+
+          <div class="chips">
+            <div class="chip on">全部 <i>34</i></div>
+            <div class="chip">Harness 专用 <i>1</i></div>
+            <div class="chip">工具型 Skill <i>33</i></div>
+            <div class="fsrch">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg>
+              <input placeholder="搜索 Skill / Agent">
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>Skill</th><th>归属 Agent</th><th>作用域</th><th>类型</th><th>入口</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="nm">batch-audit-and-notify</td><td class="mono">workwx_batch_agent</td>
+                <td class="mono" style="font-size:11px">harness/workwx_batch_agent/skills</td>
+                <td><span class="bdg harness">流程</span></td><td>自动匹配即加载</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">workwx-registry</td><td class="mono">workwx_notify_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/workwx_notify_agent</td>
+                <td><span class="bdg react">登记表</span></td><td>发送前查群/会话登记</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">workwx-webhook-send</td><td class="mono">workwx_notify_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/workwx_notify_agent</td>
+                <td><span class="bdg react">工具</span></td><td>@ 人提醒的唯一通道</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">workwx-send-msg</td><td class="mono">workwx_notify_agent · trading_anomaly_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/…</td>
+                <td><span class="bdg react">工具</span></td><td>机器人发 markdown</td><td><span class="bdg hosted">仅限已对话用户</span></td>
+              </tr>
+              <tr>
+                <td class="nm">git-worktree</td><td class="mono">code_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/code_agent</td>
+                <td><span class="bdg react">工具</span></td><td>需求隔离开发</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">log-search / log-around / log-aggregate</td><td class="mono">log_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/log_agent</td>
+                <td><span class="bdg react">工具</span></td><td>OpenObserve 检索</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">get-pod-logs 等 4 个</td><td class="mono">k8s_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/k8s_agent</td>
+                <td><span class="bdg react">工具</span></td><td>多集群 K8s 查询</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">add-queue 等 6 个</td><td class="mono">rabbitmq_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/rabbitmq_agent</td>
+                <td><span class="bdg rw">写入</span></td><td>MQ 资源治理</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">get-nacos-config 等 3 个</td><td class="mono">nacos_agent</td>
+                <td class="mono" style="font-size:11px">single/skills/nacos_agent</td>
+                <td><span class="bdg react">工具</span></td><td>配置读取与发布</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2" style="grid-template-columns:1fr 384px">
+            <div class="pane">
+              <div class="ph">batch-audit-and-notify / SKILL.md<span class="rt">harness 专用流程</span></div>
+              <div class="pb">
+                <pre class="j"># 批量核对与通知
+
+## 触发条件
+调用方要求对一批对象按给定口径核对，并对不符项下发提醒。
+
+## 流程
+1. 取全量对象清单与基准口径（只取一次）
+2. 按片大小上限拆分，逐片派发给数据类子 agent
+3. 父侧汇总：去重、统计、统一口径
+4. 命中对象交给通知类子 agent，按限流分批下发
+5. 回写结果产物，供复核与幂等重跑
+
+## 硬约束
+- 分片大小 ≤ 35，超出必须再拆
+- 派生事实（如应提交日集合）不转述，只传参数
+- 同一对象同一批只下发一次
+- 子 agent 上下文隔离，输入必须自包含</pre>
+              </div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">加载链路</div>
+                <div class="pb">
+                  <div class="hint" style="line-height:1.9">
+                    1. Harness 初始化 → 读 skills 目录建立 <span class="mono" style="font-size:11px">&lt;available_skills&gt;</span> 清单<br>
+                    2. 每轮推理注入清单（只有 name + description）<br>
+                    3. 模型判断匹配 → 调 <span class="mono" style="font-size:11px">skill_load</span> 读全文<br>
+                    4. 全文进上下文后按流程执行
+                  </div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">待完善</div>
+                <div class="pb">
+                  <div class="note">Skill 目前只在本地文件系统，Nacos 上还没有对应条目，「同步到 Nacos」按钮尚无后端实现。</div>
+                  <div class="note mt">无版本号、无变更审计：改了 SKILL.md 只影响下一次加载，历史执行无法复现当时的流程。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- ============ Prompt ============ -->
+        <section class="page" id="p-prompt">
+          <div class="hd">
+            <div>
+              <h1>Prompt</h1>
+              <div class="sub">System Prompt 只描述「我是谁、能做什么、边界在哪」。流程与口径一律外置到 Skill。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">从 Nacos 同步</button>
+              <button class="btn">+ 新建 Prompt</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(196px,1fr));margin-bottom:20px">
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">Prompt 条目</div></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">15</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">14 agent + 1 定时报告</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">来源</div><span class="bdg hosted">双通道</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">2</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">Nacos PromptSpec 优先 · 本地 md 兜底</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">含任务描述的 Prompt</div><span class="bdg ok">0</span></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">0</div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">已全部抽象为职责描述</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">平均长度</div></div>
+              <div style="font-size:26px;font-weight:620;letter-spacing:-.02em;line-height:1.15">2.1<span style="font-size:14px;color:#93939f;font-weight:500"> k</span></div>
+              <div class="ft" style="border-top:none;padding-top:2px;margin-top:6px">最长 workwx_batch_agent 4.6k</div>
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>prompt-key</th><th>使用方</th><th>类型</th><th>生效来源</th><th class="num">版本</th><th>最近更新</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">workwx_batch_agent</td><td class="nm">workwx_batch_agent</td><td><span class="bdg harness">harness</span></td><td><span class="bdg hosted">本地 md 兜底</span></td><td class="num">—</td><td>今天 22:04</td></tr>
+              <tr><td class="mono">workwx_doc_agent</td><td class="nm">workwx_doc_agent</td><td><span class="bdg react">react</span></td><td><span class="bdg hosted">本地 md 兜底</span></td><td class="num">—</td><td>今天 21:40</td></tr>
+              <tr><td class="mono">workwx_notify_agent</td><td class="nm">workwx_notify_agent</td><td><span class="bdg react">react</span></td><td><span class="bdg hosted">本地 md 兜底</span></td><td class="num">—</td><td>今天 22:04</td></tr>
+              <tr><td class="mono">deployment_agent</td><td class="nm">deployment_agent</td><td><span class="bdg harness">harness</span></td><td><span class="bdg hosted">本地 md 兜底</span></td><td class="num">—</td><td>09-16 18:20</td></tr>
+              <tr><td class="mono">diagnosis_agent</td><td class="nm">diagnosis_agent</td><td><span class="bdg harness">harness</span></td><td><span class="bdg hosted">本地 md 兜底</span></td><td class="num">—</td><td>09-15 10:02</td></tr>
+              <tr><td class="mono">k8s_agent</td><td class="nm">k8s_agent</td><td><span class="bdg react">react</span></td><td><span class="bdg hosted">本地 md 兜底</span></td><td class="num">—</td><td>09-15 09:48</td></tr>
+              <tr><td class="mono">agent-platform.daily-report-prompt-key</td><td class="nm">DailyReportSendWxJob</td><td><span class="bdg managed">定时任务</span></td><td><span class="bdg ok">Nacos PromptSpec</span></td><td class="num">v4</td><td>09-12 17:30</td></tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2" style="grid-template-columns:1fr 384px">
+            <div class="pane">
+              <div class="ph">workwx_doc_agent<span class="rt">只读职责</span></div>
+              <div class="pb">
+                <pre class="j"># 角色
+你是企业微信文档与表格数据 agent，**只读**。负责读取与整理
+文档类数据：读取文档正文、表格与智能表格的结构与记录，
+按调用方给定口径逐条比对、计算、标注，整理成结构化结果返回。
+
+# 核心职责
+1. 按标识读取文档 / 智能文档的正文与页面内容
+2. 读取表格 / 智能表格的结构：子表、字段、视图
+3. 按条件读取、筛选记录，逐条比对与计算，标注异常项
+4. 把处理结果整理成结构化输出交回调用方
+
+# 能力边界
+- 不能做：一切写入（新增 / 修改 / 删除 / 覆盖 / 导入）
+- 不能做：发送消息或通知（由具备下发能力的 agent 负责）</pre>
+              </div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">加载优先级</div>
+                <div class="pb">
+                  <div class="hint" style="line-height:1.9">
+                    1. 定义里有 <span class="mono" style="font-size:11px">prompt-key</span> → 从 Nacos 取 PromptSpec<br>
+                    2. 取到就用 Nacos 版本，并记录版本号<br>
+                    3. 取不到 / 内容为空 → 回退本地 md 正文并打 WARN<br>
+                    4. 两处都没有 → 装配失败
+                  </div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">待完善</div>
+                <div class="pb">
+                  <div class="note">当前全部 agent 都走本地 md 兜底，Nacos 上还没有对应 PromptSpec，「从 Nacos 同步」按钮尚无后端实现。</div>
+                  <div class="note mt">Prompt 无版本留痕：改了正文，历史 run 无法复现当时用的是哪一版。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MCP ============ -->
+        <section class="page" id="p-mcp">
+          <div class="hd">
+            <div>
+              <h1>MCP 服务</h1>
+              <div class="sub">外部工具的唯一入口。按名挂载到 Agent，同名连接在装配期复用，不重复建链。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">连通性自检</button>
+              <button class="btn">+ 接入 MCP</button>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-bottom:20px">
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">workwx-doc-mcp</div><span class="bdg ok">已连接</span></div>
+              <div class="ds">企业微信文档 / 表格 / 智能表格的读取能力，工具总数最多。</div>
+              <div class="tags"><span class="tag">62 工具</span><span class="tag">开放 13</span><span class="tag">只读</span><span class="tag">streamable-http</span></div>
+              <div class="ft">workwx_doc_agent · 1,614 次/7 日</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">workwx-message-mcp</div><span class="bdg ok">已连接</span></div>
+              <div class="ds">会话与消息：按会话发文本、以机器人身份发富媒体、查历史消息与素材。</div>
+              <div class="tags"><span class="tag">6 工具</span><span class="tag">4 写</span><span class="tag">streamable-http</span></div>
+              <div class="ft">workwx_notify_agent · 203 次/7 日</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">workwx-address-mcp</div><span class="bdg ok">已连接</span></div>
+              <div class="ds">通讯录查询：按关键字拿成员的 userid 与手机号，供 @ 与定位使用。</div>
+              <div class="tags"><span class="tag">1 工具</span><span class="tag">只读</span><span class="tag">streamable-http</span></div>
+              <div class="ft">workwx_notify_agent · 528 次/7 日</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">workwx-email-mcp</div><span class="bdg err">未授权</span></div>
+              <div class="ds">邮件通道：发信 / 查信 / 取附件，需要先给机器人开通邮件权限。</div>
+              <div class="tags"><span class="tag">5 工具</span><span class="tag">3 写</span><span class="tag">错误 851008</span></div>
+              <div class="ft">workwx_notify_agent · 0 次/7 日</div>
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="pane">
+              <div class="ph">工具白名单对比</div>
+              <table class="tbl" style="border:none;border-radius:0">
+                <thead><tr><th>MCP</th><th class="num">工具总数</th><th class="num">已挂载</th><th class="num">被裁剪</th><th>裁剪方式</th><th>原因</th></tr></thead>
+                <tbody>
+                  <tr><td class="nm">workwx-doc-mcp</td><td class="num">62</td><td class="num">13</td><td class="num">49</td><td>enable-tools 白名单</td><td>只读职责，写类全部不放</td></tr>
+                  <tr><td class="nm">workwx-message-mcp</td><td class="num">6</td><td class="num">6</td><td class="num">0</td><td>全量</td><td>发送通道，需要写能力</td></tr>
+                  <tr><td class="nm">workwx-address-mcp</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td>全量</td><td>只读查询</td></tr>
+                  <tr><td class="nm">workwx-email-mcp</td><td class="num">5</td><td class="num">5</td><td class="num">0</td><td>全量</td><td>无权限，调用即失败</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">接入约束</div>
+                <div class="pb">
+                  <div class="note"><b>只收远端 MCP。</b>协议里带 stdio 的会被显式拒绝并报错（本地进程方式不支持）；带 sse 走 SSE，其余走 streamable-http。</div>
+                  <div class="note mt"><b>连接按名去重。</b>并发装配多个 Agent 时，同名 MCP 只建一条链路，避免重复握手。</div>
+                  <div class="note mt"><b>失败即跳过。</b>某个 MCP 挂载失败只打错误日志并继续装配，Agent 会带着缺失的工具启动 —— 这是静默降级，需要在页面上显式告警。</div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">凭据</div>
+                <div class="pb">
+                  <dl class="kv">
+                    <dt>来源</dt><dd>Nacos AgentSpec（服务级）</dd>
+                    <dt>密钥</dt><dd class="mono">保存在平台配置，不下发</dd>
+                    <dt>审计</dt><dd><span class="bdg rw">缺失</span></dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Middleware ============ -->
+        <section class="page" id="p-middleware">
+          <div class="hd">
+            <div>
+              <h1>Middleware</h1>
+              <div class="sub">框架把每个阶段（推理 / 动作 / 模型调用 / 工具调用）前后各开一个口子，Middleware 是唯一的横切入口。</div>
+            </div>
+            <div class="row"><button class="btn">+ 添加 Middleware</button></div>
+          </div>
+
+          <div class="split">
+            <div class="pane">
+              <div class="ph">全局链<span class="rt">顺序即外层顺序</span></div>
+              <div class="pb" style="padding:0">
+                <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">1</span><div style="flex:1"><b style="font-size:12.5px">AgentRunTraceMiddleware</b><div class="hint">自研 · 采集各阶段入参出参，产出 run 轨迹（/api/traces）</div></div><span class="bdg managed">自研</span></div></div>
+                <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">2</span><div style="flex:1"><b style="font-size:12.5px">PermissionMiddleware</b><div class="hint">框架 · 工具权限裁决：allow / ask / deny</div></div><span class="bdg react">框架</span></div></div>
+                <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">3</span><div style="flex:1"><b style="font-size:12.5px">CompactionMiddleware</b><div class="hint">框架 · 上下文压缩与工具结果卸载，失败仅告警不中断</div></div><span class="bdg react">框架</span></div></div>
+                <div class="runitem"><div class="row"><span class="drag">⠿</span><span class="ordnum">4</span><div style="flex:1"><b style="font-size:12.5px">InboxMiddleware</b><div class="hint">框架 · 任务收件箱与唤醒，落盘 tasks/&lt;session&gt;.json</div></div><span class="bdg react">框架</span></div></div>
+              </div>
+              <div class="pb" style="border-top:1px solid var(--bd)"><span class="hint">顺序由装配顺序决定，<span class="mono">1 号在最外层</span> —— 所以 Trace 能看到压缩前的原始上下文。</span></div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">阶段钩子</div>
+                <div class="pb">
+                  <div class="hint" style="line-height:2">
+                    每轮迭代依次触发，每个钩子都有 <b>before</b> / <b>after</b> 两次调用：<br>
+                    <span class="mono" style="font-size:11px">onReasoning</span> · 推理开始/结束（模型入参、文本结果）<br>
+                    <span class="mono" style="font-size:11px">onActing</span> · 动作开始/结束（工具请求、工具返回）<br>
+                    <span class="mono" style="font-size:11px">onModelCall</span> · 原始模型调用（含 token 用量）<br>
+                    <span class="mono" style="font-size:11px">onAgent</span> · Agent 生命周期与子 Agent 事件转发<br>
+                    <span class="mono" style="font-size:11px">onError</span> · 异常兜底
+                  </div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">可添加</div>
+                <div class="pb" style="padding:0">
+                  <div class="runitem"><div class="row"><div style="flex:1"><b style="font-size:12.5px">OtelTracingMiddleware</b><div class="hint">导出 OpenTelemetry span</div></div><button class="btn ghost sm">添加</button></div></div>
+                  <div class="runitem"><div class="row"><div style="flex:1"><b style="font-size:12.5px">RateLimitMiddleware</b><div class="hint">onModelCall 维度限流</div></div><button class="btn ghost sm">添加</button></div></div>
+                  <div class="runitem"><div class="row"><div style="flex:1"><b style="font-size:12.5px">ContextBudgetMiddleware</b><div class="hint">按 maxContextTokens 提前截断</div></div><button class="btn ghost sm">添加</button></div></div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">为什么值得看</div>
+                <div class="pb">
+                  <div class="note">Middleware 是唯一能同时看到「模型入参 / 工具请求 / 子 Agent 事件」的地方，也是做观测与治理成本最低的位置 —— 不用改 Agent 代码。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Channels ============ -->
+        <section class="page" id="p-channels">
+          <div class="hd">
+            <div>
+              <h1>Channels</h1>
+              <div class="sub">Agent 对外的入口。每个 bot 绑定一个默认 Agent，消息进来即路由到它。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">连通性自检</button>
+              <button class="btn">+ 接入 Channel</button>
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>Bot</th><th>平台</th><th>默认 Agent</th><th>凭据</th><th class="num">近 7 日消息</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="nm">workwx_batch_agent-bot</td><td>WECOM</td><td class="mono">workwx_batch_agent</td>
+                <td class="mono" style="font-size:11px">aibJEYZFO-2NPH2…</td><td class="num">1,284</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">deployment_agent-bot</td><td>WECOM</td><td class="mono">deployment_agent</td>
+                <td class="mono" style="font-size:11px">aibvROqyj1F_kwFp…</td><td class="num">317</td><td><span class="bdg ok">已启用</span></td>
+              </tr>
+              <tr>
+                <td class="nm">feishu-main</td><td>FEISHU</td><td class="mono">harness_agent</td>
+                <td class="mono" style="font-size:11px">cli_a90766b10bf89cbb</td><td class="num">0</td><td><span class="bdg err">Agent 未注册</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2">
+            <div class="pane">
+              <div class="ph">群机器人 Webhook<span class="rt">workwx-registry</span></div>
+              <table class="tbl" style="border:none;border-radius:0">
+                <thead><tr><th>登记名</th><th>用途</th><th class="num">限流</th><th class="num">近 7 日</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">default</td><td>默认通知群</td><td class="num">20/分钟</td><td class="num">612</td><td><span class="bdg ok">正常</span></td></tr>
+                  <tr><td class="mono">tech-solutions</td><td>技术方案群</td><td class="num">20/分钟</td><td class="num">188</td><td><span class="bdg ok">正常</span></td></tr>
+                  <tr><td class="mono">ops-alert</td><td>运维告警群</td><td class="num">20/分钟</td><td class="num">167</td><td><span class="bdg hosted">命中限流 12 次</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">投递能力对比</div>
+                <div class="pb">
+                  <div class="hint" style="line-height:1.95">
+                    <b>workwx-webhook-send</b> · 群机器人 Webhook<br>
+                    <span style="color:#187a45">✓ 能真正 @ 到人</span>　<span style="color:#b42318">✗ 只能发到已登记的群</span><br><br>
+                    <b>workwx-send-msg</b> · 智能机器人<br>
+                    <span style="color:#187a45">✓ 可单聊、可发富媒体</span>　<span style="color:#b42318">✗ 不能 @ 人，且只能发给和机器人对话过的人</span><br><br>
+                    <b>邮件</b> · 企微邮箱<br>
+                    <span style="color:#187a45">✓ 覆盖全员</span>　<span style="color:#b42318">✗ 当前未授权（851008）</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">结论</div>
+                <div class="pb">
+                  <div class="note">「给全公司 100 人发提醒」目前<b>只有邮件通道理论可行</b>，但未授权；Webhook 只覆盖已登记的群；智能机器人受「仅限已对话用户」限制。上线前必须先解决投递覆盖面。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- ============ Endpoints ============ -->
+        <section class="page" id="p-endpoints">
+          <div class="hd">
+            <div>
+              <h1>Endpoints</h1>
+              <div class="sub">平台已对外暴露的 HTTP 接口，以及运维观测需要但尚缺的接口。</div>
+            </div>
+            <div class="row"><button class="btn ghost">导出 OpenAPI</button></div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>影响面</th><th class="num">近 24h</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td><span class="bdg managed">GET</span></td><td class="mono">/api/agents</td><td>列出已注册 Agent</td><td>只读</td><td class="num">246</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg managed">GET</span></td><td class="mono">/api/agents/tools/available</td><td>可用工具元数据（供编排页面挑选）</td><td>只读</td><td class="num">62</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg hosted">POST</span></td><td class="mono">/api/agents</td><td>动态创建 Agent：持久化 + 立即生效</td><td><span class="bdg rw">写 · 影响运行时</span></td><td class="num">3</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg hosted">PUT</span></td><td class="mono">/api/agents/{name}</td><td>更新 = remove + create（重建实例）</td><td><span class="bdg rw">写 · 影响运行时</span></td><td class="num">11</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg err">DELETE</span></td><td class="mono">/api/agents/{name}</td><td>删除 Agent</td><td><span class="bdg rw">写 · 影响运行时</span></td><td class="num">0</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg managed">GET</span></td><td class="mono">/api/traces?limit=50</td><td>最近 N 次 run（新的在前，上限 500）</td><td>只读</td><td class="num">482</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg managed">GET</span></td><td class="mono">/api/traces/{runId}</td><td>单次 run 的完整阶段明细</td><td>只读</td><td class="num">418</td><td><span class="bdg ok">在线</span></td></tr>
+              <tr><td><span class="bdg err">DELETE</span></td><td class="mono">/api/traces</td><td>清空内存轨迹（不动业务数据）</td><td>只读数据</td><td class="num">1</td><td><span class="bdg ok">在线</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2">
+            <div class="pane">
+              <div class="ph">尚缺的接口<span class="rt">按优先级</span></div>
+              <table class="tbl" style="border:none;border-radius:0">
+                <thead><tr><th>建议接口</th><th>用途</th><th>优先级</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">GET /api/sessions</td><td>会话列表与状态快照索引，替代翻文件系统</td><td><span class="bdg err">P0</span></td></tr>
+                  <tr><td class="mono">GET /api/traces/{runId}/stream</td><td>SSE 实时推送阶段事件，替代轮询</td><td><span class="bdg err">P0</span></td></tr>
+                  <tr><td class="mono">GET /api/resources/skills</td><td>Skill 清单与内容读取（含版本）</td><td><span class="bdg hosted">P1</span></td></tr>
+                  <tr><td class="mono">GET /api/resources/mcp</td><td>MCP 连接状态与工具白名单对比</td><td><span class="bdg hosted">P1</span></td></tr>
+                  <tr><td class="mono">POST /api/traces/{runId}/rerun</td><td>按同一入参重跑（幂等校验前置）</td><td><span class="bdg off">P2</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">接口现状</div>
+                <div class="pb">
+                  <dl class="kv">
+                    <dt>鉴权</dt><dd><span class="bdg err">无</span> 全部匿名可调</dd>
+                    <dt>写接口保护</dt><dd><span class="bdg err">无确认 / 无审计</span></dd>
+                    <dt>轨迹存储</dt><dd>内存 Map + 上限驱逐，重启即丢</dd>
+                    <dt>推送方式</dt><dd>轮询（1–2s）</dd>
+                  </dl>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">风险</div>
+                <div class="pb">
+                  <div class="note"><b>PUT /api/agents/{name} 是 remove + create</b>：正在跑的会话会被重建实例影响。生产上应该先摘流量再重建。</div>
+                  <div class="note mt"><b>Trace 只存内存</b>：容器重启后历史轨迹全部消失，出了问题只能翻日志。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 模型 ============ -->
+        <section class="page" id="p-models">
+          <div class="hd">
+            <div>
+              <h1>模型</h1>
+              <div class="sub">Agent 只声明 modelRef，实际连接由平台配置下发。</div>
+            </div>
+            <div class="row"><button class="btn">+ 注册模型</button></div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>模型</th><th>用途</th><th>接入</th><th>参数</th><th class="num">近 7 日 Token</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="nm">deepseek-v4-flash</td><td>全部 Agent 主模型</td>
+                <td class="mono" style="font-size:11px">api.deepseek.com<br>OpenAI 兼容</td>
+                <td class="mono" style="font-size:11px">reasoning-effort: low</td>
+                <td class="num">1.82 M</td><td><span class="bdg ok">正常</span></td>
+              </tr>
+              <tr>
+                <td class="nm">doubao-embedding-vision-250615</td><td>RAG 向量化</td>
+                <td class="mono" style="font-size:11px">Ark · OpenAI 兼容</td>
+                <td class="mono" style="font-size:11px">—</td>
+                <td class="num">312 k</td><td><span class="bdg ok">正常</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2">
+            <div class="pane">
+              <div class="ph">调用参数默认值</div>
+              <div class="pb">
+                <dl class="kv" style="grid-template-columns:110px 1fr 110px 1fr">
+                  <dt>max-iters</dt><dd>50</dd>
+                  <dt>max-retries</dt><dd>2</dd>
+                  <dt>max-context-tokens</dt><dd class="mono">未设置</dd>
+                  <dt>fallback-model-ref</dt><dd class="mono">未设置</dd>
+                  <dt>timeout</dt><dd>由框架默认值接管</dd>
+                  <dt>stream</dt><dd>开启</dd>
+                </dl>
+                <div class="note mt"><b>max-context-tokens 为空</b>意味着是否压缩完全交给 CompactionMiddleware 的默认判断；单次塞入 100 人数据的场景缺少兜底。</div>
+              </div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">已知坑</div>
+                <div class="pb">
+                  <div class="note">DeepSeek 思考模式要求把 <span class="mono">reasoning_content</span> 原样回传，否则 400。<b>已在平台侧加了回填格式化器</b>，属于厂商特化代码，换模型时要重新评估。</div>
+                  <div class="note mt">思考模式下流式输出的 <span class="mono">onErrorDropped</span> 曾经会把异常吞成「静默失败」，需要依赖 Trace 才能发现。</div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">成本观测</div>
+                <div class="pb">
+                  <dl class="kv">
+                    <dt>缓存命中</dt><dd>61%（Prompt 前缀复用）</dd>
+                    <dt>最贵 Agent</dt><dd>workwx_batch_agent · 412k/次</dd>
+                    <dt>无预算上限</dt><dd><span class="bdg rw">待补</span></dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 环境 ============ -->
+        <section class="page" id="p-envs">
+          <div class="hd">
+            <div>
+              <h1>环境</h1>
+              <div class="sub">环境名 = 国家-阶段。工具通过 environment 参数引用，由 EnvironmentRegistry 解析成连接信息。</div>
+            </div>
+            <div class="row">
+              <button class="btn ghost">校验凭据</button>
+              <button class="btn">+ 新增环境</button>
+            </div>
+          </div>
+
+          <div class="chips">
+            <div class="chip on">全部 <i>9</i></div>
+            <div class="chip">Cameroon <i>3</i></div>
+            <div class="chip">Ghana <i>3</i></div>
+            <div class="chip">Uganda <i>3</i></div>
+            <div class="fsrch">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/></svg>
+              <input placeholder="搜索环境 / 组件">
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr><th>环境</th><th>Nacos</th><th>K8s</th><th>RabbitMQ</th><th>XXL-Job</th><th>OpenObserve</th><th>完整度</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="nm">cameroon-uat</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td>
+                <td><span class="bdg ok">6 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">cameroon-test</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg hosted">2 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">cameroon-prod</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td><td><span class="bdg ok">已配置</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg ok">5 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">ghana-uat</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg hosted">2 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">ghana-test</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg hosted">2 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">ghana-prod</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg hosted">2 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">uganda-uat</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg hosted">2 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">uganda-test</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg err">未配置</span></td>
+                <td><span class="bdg hosted">2 / 6</span></td>
+              </tr>
+              <tr>
+                <td class="nm">uganda-prod</td>
+                <td><span class="bdg ok">已配置</span></td><td><span class="bdg err">Token 空</span></td><td><span class="bdg err">未配置</span></td><td><span class="bdg err">密码空</span></td><td><span class="bdg ok">已配置</span></td>
+                <td><span class="bdg hosted">3 / 6</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="split mt2">
+            <div class="pane">
+              <div class="ph">凭据落盘现状</div>
+              <div class="pb" style="padding:0">
+                <div class="runitem"><div class="a"><b>明文默认值</b><span class="bdg rw">高危</span></div><div class="hint" style="margin-top:5px">Nacos / K8s / RabbitMQ / XXL-Job 的账号密码大量以 <span class="mono">${VAR:默认值}</span> 形式写在 application.yml 里，默认值即真实口令。</div></div>
+                <div class="runitem"><div class="a"><b>环境不可删改</b><span class="bdg off">只读</span></div><div class="hint" style="margin-top:5px">环境目前只能改配置文件后重启，页面上无法动态增减。</div></div>
+                <div class="runitem"><div class="a"><b>无连接自检</b><span class="bdg rw">待补</span></div><div class="hint" style="margin-top:5px">配置错了要到工具调用失败时才发现。</div></div>
+              </div>
+            </div>
+            <div class="pane">
+              <div class="ph">建议<span class="rt">P0</span></div>
+              <div class="pb">
+                <div class="note">把 6 个未配全的环境标成<b>不可用</b>，避免 Agent 拿到一个半残的连接信息去调用，报出难以定位的错。</div>
+                <div class="note mt">凭据统一改走环境变量 / 密钥管理，配置文件里只留占位符；页面提供「连通性校验」按钮而不是展示明文。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 状态存储 ============ -->
+        <section class="page" id="p-storage">
+          <div class="hd">
+            <div>
+              <h1>状态存储</h1>
+              <div class="sub">会话与任务状态目前落在本地文件系统；MySQL / Redis / ES 只被工具和检索顺带使用，没有参与 Agent 治理。</div>
+            </div>
+            <div class="row"><button class="btn ghost">校验一致性</button></div>
+          </div>
+
+          <div class="grid" style="margin-bottom:20px">
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">文件 StateStore</div><span class="bdg managed">在用</span></div>
+              <div class="ds">会话、任务、记忆、产物都在 workspace 下按 agent / user / session 分目录。</div>
+              <div class="tags"><span class="tag">agent_state.json</span><span class="tag">sessions.jsonl</span><span class="tag">tasks/*.json</span></div>
+              <div class="ft">单机可用 · 多实例不共享</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">MySQL</div><span class="bdg hosted">仅工具用</span></div>
+              <div class="ds">只作为 <span class="mono">sql-query</span> 的数据源（ikb_risk_control），不是平台自身的库。</div>
+              <div class="tags"><span class="tag">无业务表</span><span class="tag">无审计表</span></div>
+              <div class="ft">未用于治理</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">Redis</div><span class="bdg hosted">仅检索</span></div>
+              <div class="ds">检索权限与缓存，database 0。没有用于会话锁、并发令牌、幂等键。</div>
+              <div class="tags"><span class="tag">无分布式锁</span><span class="tag">无幂等键</span></div>
+              <div class="ft">未用于治理</div>
+            </div>
+            <div class="card" style="cursor:default">
+              <div class="r1"><div class="nm">Elasticsearch</div><span class="bdg hosted">仅 RAG</span></div>
+              <div class="ds">索引 <span class="mono">doc_vector</span> 供知识检索。执行轨迹没有入库。</div>
+              <div class="tags"><span class="tag">doc_vector</span><span class="tag">无 trace 索引</span></div>
+              <div class="ft">未用于治理</div>
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="pane">
+              <div class="ph">目录布局</div>
+              <div class="pb">
+                <pre class="j">workspace/
+├─ single/
+│  ├─ skills/&lt;agent&gt;/&lt;skill&gt;/SKILL.md        # 单 Agent 技能
+│  └─ statestore/&lt;agent&gt;/&lt;user&gt;/
+│     └─ agent_state.json                      # 会话状态快照
+└─ harness/&lt;agent&gt;/
+   ├─ AGENTS.md                                # 参数表（流程的稳定输入）
+   ├─ skills/&lt;skill&gt;/SKILL.md                  # Harness 专用流程
+   └─ &lt;user&gt;/
+      ├─ MEMORY.md
+      ├─ memory/&lt;date&gt;.md                      # 长期记忆
+      ├─ audit-results/*.md                    # 任务产物
+      └─ agents/&lt;agent&gt;/
+         ├─ sessions/*.jsonl                   # 对话流水
+         └─ tasks/*.json                       # 子任务与派发关系</pre>
+              </div>
+            </div>
+            <div>
+              <div class="pane">
+                <div class="ph">问题</div>
+                <div class="pb">
+                  <div class="note"><b>无法跨实例。</b>状态是本地文件，多副本部署会各写各的，会话漂移。</div>
+                  <div class="note mt"><b>无法查询。</b>要回答「昨天谁跑了多少轮」只能遍历目录。</div>
+                  <div class="note mt"><b>无保留策略。</b>目录只增不减，没有 TTL 与归档。</div>
+                  <div class="note mt"><b>Trace 在内存。</b>重启即丢，与文件状态无法关联成一条完整链路。</div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph">建议引入顺序</div>
+                <div class="pb">
+                  <div class="steps" style="flex-direction:column;align-items:flex-start;gap:9px;font-size:12px">
+                    <div><span class="ordnum">1</span> MySQL：run / step / tool_call 三张表，把 Trace 落库</div>
+                    <div><span class="ordnum">2</span> MySQL：会话索引表，替代遍历目录</div>
+                    <div><span class="ordnum">3</span> Redis：会话锁 + 下发幂等键 + 限流计数</div>
+                    <div><span class="ordnum">4</span> ES：轨迹全文检索与子 Agent 树检索</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var TITLES = {
+    overview: '概览', traces: '执行链路', sessions: '会话记录',
+    agents: 'Agents', agent: 'Agent 详情', harness: 'Harness 编排', workflows: '工作流',
+    tools: '工具', skills: 'Skills', prompt: 'Prompt', mcp: 'MCP 服务',
+    middleware: 'Middleware', channels: 'Channels', endpoints: 'Endpoints',
+    models: '模型', envs: '环境', storage: '状态存储'
+  };
+  var WIDE = { traces: 1, harness: 1, workflows: 1, sessions: 1, agent: 1, storage: 1 };
+
+  function norm(key) {
+    return String(key || '').replace(/^p-/, '');
+  }
+
+  function go(key, title) {
+    var k = norm(key);
+    var page = document.getElementById('p-' + k);
+    if (!page) return false;
+    if (location.hash !== '#' + k) {
+      try { history.replaceState(null, '', '#' + k); } catch (err) { }
+    }
+
+    var cur = document.querySelector('.page.on');
+    if (cur) cur.classList.remove('on');
+    page.classList.add('on');
+
+    var items = document.querySelectorAll('.side .item');
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.toggle('on', items[i].getAttribute('data-go') === k);
+    }
+
+    var wrap = document.querySelector('.wrap');
+    if (wrap) wrap.classList.toggle('wide', !!WIDE[k]);
+
+    var ttl = document.getElementById('topTitle');
+    if (ttl) ttl.textContent = title || TITLES[k] || k;
+
+    var body = document.querySelector('.body');
+    if (body) body.scrollTop = 0;
+    return true;
+  }
+
+  // ---------- 点击导航 / 卡片 ----------
+  document.addEventListener('click', function (e) {
+    var nav = e.target.closest ? e.target.closest('[data-go]') : null;
+    if (nav) {
+      var k = norm(nav.getAttribute('data-go'));
+      if (document.getElementById('p-' + k)) {
+        go(k, nav.getAttribute('data-title'));
+        return;
+      }
+    }
+
+    // tab 切换：作用域限定在最近的 .page
+    var tab = e.target.closest ? e.target.closest('.tab[data-tab]') : null;
+    if (tab) {
+      var scope = tab.closest('.page') || document;
+      var tabs = scope.querySelectorAll('.tab');
+      for (var i = 0; i < tabs.length; i++) tabs[i].classList.toggle('on', tabs[i] === tab);
+      var pages = scope.querySelectorAll('.tabpage');
+      for (var j = 0; j < pages.length; j++) {
+        pages[j].classList.toggle('on', pages[j].getAttribute('data-tabpage') === tab.getAttribute('data-tab'));
+      }
+      return;
+    }
+
+    // chips 单选
+    var chip = e.target.closest ? e.target.closest('.chip') : null;
+    if (chip && chip.parentElement) {
+      var sibs = chip.parentElement.querySelectorAll('.chip');
+      for (var m = 0; m < sibs.length; m++) sibs[m].classList.remove('on');
+      chip.classList.add('on');
+      return;
+    }
+
+    // run 列表选中
+    var run = e.target.closest ? e.target.closest('.runs .runitem') : null;
+    if (run && run.parentElement) {
+      var rs = run.parentElement.querySelectorAll('.runitem');
+      for (var n = 0; n < rs.length; n++) rs[n].classList.remove('sel');
+      run.classList.add('sel');
+    }
+  });
+
+  // ---------- 调用树 ----------
+  var collapsed = {};
+
+  function refreshTree() {
+    var rows = document.querySelectorAll('#traceTree .trow');
+    for (var i = 0; i < rows.length; i++) {
+      var p = rows[i].getAttribute('data-path') || '';
+      var parts = p.split('.');
+      var hidden = false;
+      for (var d = 1; d < parts.length; d++) {
+        if (collapsed[parts.slice(0, d).join('.')]) { hidden = true; break; }
+      }
+      rows[i].style.display = hidden ? 'none' : '';
+    }
+  }
+
+  window.twist = function (ev, el, path) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    if (collapsed[path]) { delete collapsed[path]; el.classList.add('op'); }
+    else { collapsed[path] = 1; el.classList.remove('op'); }
+    refreshTree();
+  };
+
+  window.pickNode = function (el, path) {
+    var rows = document.querySelectorAll('#traceTree .trow');
+    for (var i = 0; i < rows.length; i++) rows[i].classList.remove('sel');
+    el.classList.add('sel');
+    var np = document.getElementById('nodePath');
+    if (np) np.textContent = path;
+  };
+
+  // ---------- 搜索框快捷键 ----------
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && String(e.key).toLowerCase() === 'k') {
+      e.preventDefault();
+      var box = document.querySelector('.page.on .fsrch input') || document.querySelector('.fsrch input');
+      if (box) box.focus();
+    }
+  });
+
+  // ---------- 深链：#traces 可直接打开某页 ----------
+  window.addEventListener('hashchange', function () {
+    go(String(location.hash || '').replace(/^#/, ''));
+  });
+
+  refreshTree();
+  var initial = String(location.hash || '').replace(/^#/, '');
+  if (!go(initial)) go('overview');
+  window.__go = go;
+})();
+</script>
+</body>
+</html>

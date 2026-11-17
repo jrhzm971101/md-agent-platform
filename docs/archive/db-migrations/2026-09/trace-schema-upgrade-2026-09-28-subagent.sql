@@ -1,0 +1,27 @@
+-- =====================================================================================
+-- 增量升级脚本（2026-09-28）：给已存在的 md_agent_run 补 parent_run_id / task_id 两列
+-- =====================================================================================
+-- 为什么加这两列（业务背景，与 trace-schema.sql 里那段注释同一份理由）：
+--   异步子 agent（agent_spawn timeout_seconds=0，或同步等待超时后被 promote 成后台任务）
+--   会在父 run 收口之后才真正开跑。中间件发现上下文里的 RunState 已 finished，只能新开一条
+--   run —— 此时若不记下"父是谁"，页面上就会出现一棵不知道从哪来的孤立链路。
+--   task_id 则把它和框架 TaskRepository 里的后台任务对上，便于按任务号反查。
+--
+-- 为什么不并进 trace-schema.sql：
+--   那份是「全新建库」脚本，CREATE TABLE IF NOT EXISTS 对已存在的表是空操作。把 ALTER 混进去
+--   会让"重跑一遍建表脚本"变成不安全的事。增量语句单独一份、只跑一次。
+--
+-- 幂等性：MySQL 8 不支持 ADD COLUMN IF NOT EXISTS（那是 MariaDB 的扩展），所以本脚本**不是**
+--   幂等的 —— 重复执行会报 "Duplicate column name 'parent_run_id'"（或 'task_id'、索引名）。
+--   那个报错本身无害（说明已经升过了），见到可以直接跳过。
+--
+-- ALTER TABLE `md_agent_run`
+--     ADD COLUMN `parent_run_id` VARCHAR(255) DEFAULT NULL
+--         COMMENT '派发出这条 run 的父 run；NULL=用户直接发起' AFTER `input`,
+--     ADD COLUMN `task_id` VARCHAR(128) DEFAULT NULL
+--         COMMENT '框架 TaskRepository 的后台任务号；NULL=不是后台任务跑起来的' AFTER `parent_run_id`,
+--     ADD KEY `idx_parent_run` (`parent_run_id`);
+--
+-- 存量数据（升级前产生的 run）两列保持 NULL —— 不去回填：能用的线索只有"事件里的子会话 id"，
+--   而升级前那些 run 本来就不是异步派发出来的，硬猜只会往观测数据里灌看起来像真的假值。
+-- =====================================================================================

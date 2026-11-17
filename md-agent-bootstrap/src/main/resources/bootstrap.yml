@@ -1,0 +1,44 @@
+server:
+  port: 9091
+
+spring:
+  application:
+    name: md-agent-platform
+
+  # ── 接口前缀 ──
+  # 一体化平台（md-admin-platform）的约定是「一个后端服务占一个与它同名的一级路径」，
+  # 网关 md-gateway 的路由（Path=/agent-platform/**）原样转发、**不做 StripPrefix** ——
+  # 前缀是接口契约的一部分，所以必须由服务自己带上。
+  #
+  # ⚠️ 属性名必须是 spring.webflux.base-path：本服务引的是 spring-boot-starter-webflux
+  #    （见 md-agent-server/pom.xml，与官方 agentscope-service 同一技术栈），
+  #    而 server.servlet.context-path 是 Servlet 专用的 —— 在 WebFlux 服务里配它
+  #    既不生效也不报错，接口照样挂在 /api/** 下，前端则会因为发了带前缀的请求而满屏 404。
+  #    和 data-platform 那条 context-path 是同一件事的两种写法（它是 Servlet 服务）。
+  #
+  # 也可以被环境变量 SERVER_CONTEXT_PATH 覆盖（与 data-platform 同名，方便统一注入）。
+  # 想回到"接口根就是 /api"（例如前端不带前缀）时把它设成空值启动即可。
+  webflux:
+    base-path: ${SERVER_CONTEXT_PATH:/agent-platform}
+
+  config:
+    import: "optional:nacos:${spring.application.name}"
+  cloud:
+    nacos:
+      config:
+        enabled: ${NACOS_CONFIG_ENABLED:false}
+        server-addr: ${NACOS.SERVER-ADDR:127.0.0.1:8848}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        namespace: ${NACOS_NS:md-agent-platform}
+        fileExtension: yaml
+
+  #    activate:
+##            on-cloud-platform: kubernetes
+#      on-cloud-platform: none
+#    import: "optional:kubernetes:"
+#  cloud:
+#    kubernetes:
+#      config:
+#        enabled: true
+#        name: md-agent-platform
+#        namespace: default

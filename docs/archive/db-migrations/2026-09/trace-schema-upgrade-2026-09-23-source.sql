@@ -1,0 +1,25 @@
+-- =====================================================================================
+-- 增量升级脚本（2026-09-23）：给已存在的 md_agent_run 补 source 列与 idx_user_session 索引
+-- =====================================================================================
+-- 为什么不并进 trace-schema.sql：
+--   那个文件是「全新建库」脚本，里面的 CREATE TABLE IF NOT EXISTS 对已存在的表是空操作 ——
+--   把 ALTER 混进去只会让「重跑一遍建表脚本」变成一件不安全的事。
+--   增量语句单独一份、只跑一次，是让两边都保持可重复执行的最小代价。
+--
+-- 幂等性：MySQL 8 不支持 ADD COLUMN IF NOT EXISTS（那是 MariaDB 的扩展），
+--   所以本脚本**不是**幂等的 —— 重复执行会报 "Duplicate column name 'source'"。
+--   那个报错本身无害（说明已经升过了），看到它可以直接跳过。
+--
+-- 执行方式：在有 mysql 客户端的环境里 source 本文件，或用下方的等价语句手工执行。
+--   本项目当前没有 mysql CLI，是用一次性 JDBC 探针执行的（见 docs/develop/2026-09-23_session-management.md）。
+--
+-- ALTER TABLE `md_agent_run`
+--     ADD COLUMN `source` VARCHAR(32) DEFAULT NULL
+--         COMMENT '触发来源：console | wecom | feishu | schedule；NULL=入口方没写'
+--         AFTER `user_id`,
+--     ADD KEY `idx_user_session` (`user_id`, `session_id`);
+--
+-- 存量数据（升级前产生的 run）的 source 保持 NULL —— 不去回填、不去猜：
+--   能用的线索只有 sessionId 的形状，而那是各入口自己的约定，改了 sessionId 生成的写法
+--   就会让回填结果与事实不符。链路观测数据一旦"看起来有值但是错的"，比空着更糟。
+-- =====================================================================================

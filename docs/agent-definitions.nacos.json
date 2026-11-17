@@ -1,0 +1,208 @@
+// risk_third_call_record
+db.getCollection("risk_third_call_record_1_MTN_Cameroon").createIndexes([{
+  riskNo: 1
+}, {
+  orderNo: 1
+}, {
+  traceId: 1
+}, {
+  customerId: 1, createTime: -1
+}, {
+  createTime: 1
+}]);
+// risk_feature
+db.getCollection("risk_feature_1_MTN_Cameroon").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_flow_path
+db.getCollection("risk_flow_path_1_MTN_Cameroon").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_record
+db.getCollection("risk_record_1_MTN_Cameroon").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+processNo: 1
+}, {
+applyTime: 1
+}, {
+riskTime: 1
+}, {
+createTime: 1
+}]);
+// risk_report
+db.getCollection("risk_report_1_MTN_Cameroon").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_rule_result
+db.getCollection("risk_rule_result_1_MTN_Cameroon").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_webhook_record
+db.getCollection("risk_webhook_record_1_MTN_Cameroon").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+customerId: 1, callTime: -1
+}, {
+callTime: 1
+}]);
+// --------------- 灰度 ---------------
+// risk_third_call_record
+db.getCollection("risk_third_call_record_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_feature
+db.getCollection("risk_feature_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_flow_path
+db.getCollection("risk_flow_path_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_record
+db.getCollection("risk_record_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+processNo: 1
+}, {
+applyTime: 1
+}, {
+riskTime: 1
+}, {
+createTime: 1
+}]);
+// risk_report
+db.getCollection("risk_report_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_rule_result
+db.getCollection("risk_rule_result_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+traceId: 1
+}, {
+customerId: 1, createTime: -1
+}, {
+createTime: 1
+}]);
+// risk_webhook_record
+db.getCollection("risk_webhook_record_1_MTN_Cameroon_gray").createIndexes([{
+riskNo: 1
+}, {
+orderNo: 1
+}, {
+customerId: 1, callTime: -1
+}, {
+callTime: 1
+}]);
+// http_call_records
+db.getCollection("http_call_records").createIndexes([
+{
+businessNode: 1,
+appId: 1,
+businessId: 1,
+tenantId: -1,
+callTime: -1
+},
+{
+customerId: 1,
+callTime: -1
+},
+{
+thirdCustomerId: 1,
+callTime: -1
+},
+{
+orderNo: 1,
+callTime: -1
+},
+{
+apiName: 1,
+serviceName: 1,
+callTime: -1
+},
+{
+businessKey: 1,
+callTime: -1
+}
+]);

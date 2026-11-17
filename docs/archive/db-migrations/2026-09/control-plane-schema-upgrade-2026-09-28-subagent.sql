@@ -1,0 +1,29 @@
+-- =====================================================================================
+-- 增量升级脚本（2026-09-28）：给已存在的 md_agent_workspace 补子 agent 执行形态两列
+-- =====================================================================================
+-- 为什么加这两列：
+--   框架默认「子 agent 同步还是异步」是由模型自己填的 agent_spawn.timeout_seconds 决定
+--   （0=后台、>0=同步、超时还会 promote 成后台任务）。对"必须拿到结果才能继续"的编排来说，
+--   这种不确定性是致命的 —— 同一份编排每次跑的形态都可能不同。
+--   置 subagent_force_sync=1 后，应用侧会在 RuntimeContext 上写 AgentSpawnTool.CTX_FORCE_SYNC，
+--   其优先级高于模型参数：timeout_seconds=0 被强制改写成同步等待，超时也不再 promote，
+--   而是中断子 agent 并返回 status: timeout。
+--
+-- 为什么不并进 control-plane-schema.sql：
+--   那份是「全新建库」脚本，CREATE TABLE IF NOT EXISTS 对已存在的表是空操作。ALTER 混进去
+--   会让"重跑一遍建表脚本"变成不安全的事（本项目的既定约定，见 trace 与 workflow 的同类脚本）。
+--
+-- 幂等性：MySQL 8 不支持 ADD COLUMN IF NOT EXISTS，所以本脚本**不是**幂等的 ——
+--   重复执行会报 "Duplicate column name 'subagent_force_sync'"，见到可直接跳过。
+--
+-- ALTER TABLE `md_agent_workspace`
+--     ADD COLUMN `subagent_force_sync` TINYINT(1) DEFAULT NULL
+--         COMMENT '子 agent 是否强制同步执行；NULL=用框架默认（由模型决定），1=强制同步'
+--         AFTER `disable_tools_config`,
+--     ADD COLUMN `subagent_sync_timeout_seconds` INT DEFAULT NULL
+--         COMMENT '强制同步时的等待秒数；NULL=框架默认 30，>600 由框架夹到 600'
+--         AFTER `subagent_force_sync`;
+--
+-- 存量数据两列保持 NULL = "行为与升级前完全一致"（仍由框架/模型决定）。这是刻意的：
+--   强制同步会改变已有编排的运行时行为（后台派发变成阻塞等待），必须是页面上显式打开的结果。
+-- =====================================================================================

@@ -1,0 +1,97 @@
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "contentDense": {
+        "type": "dense_vector",
+        "dims": 1024,
+        "similarity": "cosine"
+      },
+      "summarySparse": {
+        "type": "sparse_vector"
+      },
+      "owner_user": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text"
+      },
+      "content": {
+        "type": "text"
+      },
+      "summary": {
+        "type": "text"
+      },
+      "parentDocId": {
+        "type": "keyword"
+      },
+      "chunkIndex": {
+        "type": "integer"
+      },
+      "channel": {
+        "type": "keyword"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "mediaType": {
+        "type": "keyword"
+      },
+      "sourceFileName": {
+        "type": "keyword"
+      },
+      "sourceUrl": {
+        "type": "keyword"
+      },
+      "uploader": {
+        "type": "keyword"
+      },
+      "uploadTime": {
+        "type": "date"
+      },
+      "department": {
+        "type": "keyword"
+      },
+      "docPermission": {
+        "type": "keyword"
+      },
+      "pageNumber": {
+        "type": "integer"
+      },
+      "docType": {
+        "type": "keyword"
+      },
+      "confluenceId": {
+        "type": "keyword"
+      },
+      "spaceKey": {
+        "type": "keyword"
+      },
+      "spaceId": {
+        "type": "keyword"
+      },
+      "spaceName": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "versionNumber": {
+        "type": "keyword"
+      },
+      "lastModified": {
+        "type": "date"
+      },
+      "allowedUserKeys": {
+        "type": "keyword"
+      },
+      "allowedGroupNames": {
+        "type": "keyword"
+      }
+    }
+  }
+}

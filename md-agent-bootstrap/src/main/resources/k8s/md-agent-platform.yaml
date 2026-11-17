@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: md-agent-platform
+  labels:
+    app: md-agent-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: md-agent-platform
+  template:
+    metadata:
+      name: md-agent-platform
+      labels:
+        app: md-agent-platform
+    spec:
+      serviceAccount: cluster-admin
+      containers:
+        - name: md-agent-platform
+          image: md-agent-platform:v0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9081
+              protocol: TCP
+          volumeMounts:
+            - name: host-workspace-volume
+              mountPath: /opt/md-agent-platform/workspace
+          env:
+            - name: NACOS_NS
+              value: agent_namespace
+          envFrom:
+            - secretRef:
+                name: md-agent-platform-secret
+      restartPolicy: Always
+      volumes:
+        - name: host-workspace-volume
+          hostPath:
+            # 宿主机路径
+            path: /opt/jinran/data/md-agent-platform/workspace
+            # 自动创建目录（不存在则自动创建）
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: md-agent-platform
+spec:
+  selector:
+    app: md-agent-platform
+  ports:
+    - protocol: TCP
+      port: 9081          # Service 集群内部暴露的端口（集群内其他服务访问用）
+      targetPort: 9081  # 对应 Pod 实际监听的端口（你的应用在 Pod 中使用的端口）
+      nodePort: 30981  # 节点对外暴露的端口（外部访问集群时使用）
+      name: http
+  type: NodePort        # 保持 NodePort 类型，允许通过节点 IP:nodePort 访问

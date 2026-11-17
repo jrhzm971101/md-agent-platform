@@ -1,0 +1,141 @@
+# ============================================================================
+# Md-Agent-Platform 配置样例
+# ----------------------------------------------------------------------------
+# 1. 复制本文件为同目录下的 application.yml：
+#      cp application.example.yml application.yml
+# 2. application.yml 已被 .gitignore 忽略，可以安全填写真实地址与凭据。
+# 3. 敏感项优先通过环境变量注入；未设置时为空，启动前必须补齐。
+# ============================================================================
+
+spring:
+  # Elasticsearch 自签名证书信任（使用 HTTPS 时保留；HTTP 环境可删除本段）
+  ssl:
+    bundle:
+      pem:
+        es-ssl-bundle:
+          truststore:
+            certificate: classpath:certs/http_ca.crt
+
+  # ── MySQL（控制面元数据 + SQL 工具）──
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://127.0.0.1:3306/md-agent-platform?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ── Redis（检索权限 / 缓存）──
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      database: 0
+      timeout: 10000
+
+  # ── Elasticsearch（RAG 检索）──
+  elasticsearch:
+    uris: ${ES_URIS:https://127.0.0.1:9200}
+    username: ${ES_USERNAME:elastic}
+    password: ${ES_PASSWORD:}
+    restclient:
+      ssl:
+        bundle: es-ssl-bundle
+
+  # ── 模型（OpenAI 兼容厂商：Ark / DeepSeek 等）──
+  ai:
+    model:
+      api-key: ${MODEL_API_KEY:}
+      base-url: ${MODEL_BASE_URL:https://api.deepseek.com}
+      model-name: ${MODEL_NAME:deepseek-v4-flash}
+      reasoning-effort: ${MODEL_REASONING_EFFORT:low}
+      embedding-model: ${EMBEDDING_MODEL:doubao-embedding-vision-250615}
+
+# ── 平台核心配置 ──
+agent-platform:
+  workspace-root: ${WORKSPACE_ROOT:workspace}
+  verbose-trace-users: []              # 详细链路输出白名单（openId/userId）
+
+  # 控制面元数据；建表脚本见 resources/db/control-plane-schema.sql
+  control-plane-skill-database: agentscope
+
+  # 状态存储：库与表由 AgentScope MysqlAgentStateStore 自动创建
+  state-store-database: md_agent_state
+
+  # 工作区文件后端：库与表由框架自动创建
+  workspace-kv-database: md_agent_workspace
+
+  # ── 运行链路观测 ──
+  trace-max-runs: 200
+  trace-archive-enabled: true
+  trace-archive-queue-capacity: 20000
+  trace-archive-batch-size: 500
+  trace-retention-days: 30
+  trace-stream-recovery-interval-ms: 5000
+  trace-stream-heartbeat-ms: 15000
+  chat-heartbeat-ms: 15000
+
+# ── 检索（RRF 参数）──
+retrieval:
+  index-name: ${RETRIEVAL_INDEX:doc_vector}
+  rrf-window: 50
+  rrf-k: 60
+  top-n: 20
+  knn-candidates: 500
+  knn-k: 20
+
+# ── Confluence Wiki 同步 ──
+confluence:
+  baseUrl: ${CONFLUENCE_BASE_URL:}
+  username: ${CONFLUENCE_USERNAME:}
+  password: ${CONFLUENCE_PASSWORD:}
+  pageSize: 200
+  maxPagesPerSpace: -1
+  wikiFilterMonths: 0
+  wikiSyncStartYear: 2023
+  wikiSyncEndYear: 2026
+  wikiSyncYearStep: 2
+  requestIntervalMs: 500
+
+# ── XXL-Job ──
+xxl:
+  job:
+    adminAddresses: ${XXL_JOB_ADMIN_ADDRESSES:}
+    appName: md-agent-platform
+    accessToken: ${XXL_JOB_ACCESS_TOKEN:}
+    page:
+      jobGroup: 2
+      triggerStatus: -1
+      start: 0
+      length: 20
+
+# ── GitLab API 与本地快照 ──
+# 地址与鉴权按 environment 从环境目录读取，这里只配置与具体环境无关的参数
+gitlab:
+  base-dir: ${GITLAB_BASE_DIR:workspace/code}
+  timeout-ms: 30000
+  archive-timeout-ms: 300000
+
+# ── Grafana（地址与 Basic Auth 从环境目录读取）──
+grafana:
+  connect-timeout-ms: 5000
+  read-timeout-ms: 60000
+  default-datasource-uid: ${GRAFANA_DEFAULT_DATASOURCE_UID:}
+
+# ── SkyWalking（GraphQL 地址与 Basic Auth 从环境目录读取）──
+skywalking:
+  connect-timeout-ms: 5000
+  read-timeout-ms: 30000
+
+# ── NineData（地址与 AK/SK 从环境目录读取）──
+ninedata:
+  timeout-ms: 120000
+  max-retries: ${NINEDATA_MAX_RETRIES:2}
+  retry-backoff-ms: ${NINEDATA_RETRY_BACKOFF_MS:500}
+
+management:
+  health:
+    redis:
+      enabled: false
+
+logging:
+  level:
+    com.md.agentplatform: INFO

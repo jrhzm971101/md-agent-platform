@@ -1,0 +1,58 @@
+# ============================================================
+# Build outputs
+# ============================================================
+target/
+*.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+
+# ============================================================
+# IDE / editor
+# ============================================================
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# Local agent / tooling settings
+# ============================================================
+.claude/settings.local.json
+.agents/
+.codex/
+
+# ============================================================
+# Logs, heap dumps and runtime data
+# ============================================================
+logs/
+**/logs/
+*.log
+*.log.*
+hs_err_pid*
+*.hprof
+.db-backups/
+
+# Agent runtime workspaces (generated at runtime, may contain business data)
+/workspace/
+/md-agent-bootstrap/workspace/
+
+# ============================================================
+# Secrets / local configuration
+# Copy application.example.yml to application.yml before running.
+# ============================================================
+md-agent-bootstrap/src/main/resources/application.yml
+md-agent-bootstrap/src/main/resources/application-*.yml
+md-agent-bootstrap/src/main/resources/k8s/md-agent-platform-cm.yaml
+md-agent-bootstrap/src/main/resources/k8s/md-agent-platform-secret.yaml
+.env
+.env.*
+*.local
+
+# ============================================================
+# Misc
+# ============================================================
+$null
